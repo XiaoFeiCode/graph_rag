@@ -14,8 +14,6 @@
 
 Python, PyTorch, Transformers, FastAPI, LangChain, DeepSeek, Neo4j, MySQL, BGE Embedding, HuggingFace Datasets
 
-> 简历版本中可扩展为 Debezium + Kafka + Milvus 架构。当前仓库已实现 MySQL -> Neo4j 批量同步、Neo4j Hybrid Retrieval 与 GraphRAG 主链路；Debezium/Kafka/Milvus 可作为后续工程化增强方向。
-
 ## 架构
 
 ```text
@@ -45,8 +43,8 @@ src/
   ner/               # 商品文本 NER 数据处理、训练、评估和预测
   web/               # FastAPI 服务、GraphRAG 问答链路和静态聊天页
 data/                # 本地数据，不建议完整上传大规模处理产物
-checkpoints/         # 本地模型权重，不上传 GitHub
-docs/                # 简历描述、架构说明和面试材料
+checkpoints/         # 本地模型权重目录
+docs/                # 架构设计与模块说明
 ```
 
 ## 快速开始
@@ -124,7 +122,7 @@ uv run python -m src.web.utils
 4. `ChatService._execute_cypher` 执行图查询。
 5. `ChatService._generate_answer` 结合查询结果生成自然语言回答。
 
-## 可展示成果
+## 当前能力
 
 - 1000 条商品 query 标注数据，完成 B/I/O 序列标注训练流程。
 - 已训练 BERT NER 模型，并支持批量抽取商品卖点标签。
@@ -141,4 +139,4 @@ uv run python -m src.web.utils
 
 ## 安全说明
 
-`.env`、数据库密码、API key、模型 checkpoint 和本地处理数据不会提交到 GitHub。公开仓库只保留源码、配置模板和项目说明。
+项目通过 `.env` 管理数据库密码、API key 等敏感配置，仓库仅提供 `.env.example` 作为配置模板。模型 checkpoint、日志和预处理数据作为本地运行产物管理。

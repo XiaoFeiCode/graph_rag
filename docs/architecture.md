@@ -47,14 +47,3 @@ data/ner/raw/data.json
   -> checkpoints/ner/best_model
   -> src.ner.predict
 ```
-
-## Public Repo Boundary
-
-The GitHub repository should include source code, docs, `.env.example`, and small sample data only. Do not commit:
-
-- `.env`
-- model checkpoints
-- processed datasets
-- database dumps
-- logs
-- Python caches
