@@ -1,3 +1,5 @@
+import logging
+
 from langchain_core.output_parsers import JsonOutputParser, StrOutputParser
 from langchain_core.prompts import PromptTemplate
 from langchain_deepseek import ChatDeepSeek
@@ -7,11 +9,16 @@ from neo4j_graphrag.types import SearchType
 
 from dotenv import load_dotenv
 from src.configuration.config import NEO4J_CONFIG
+from src.web.cypher_guard import UnsafeCypherError, ensure_declared_params, validate_readonly_cypher
 
 load_dotenv()
 
+logger = logging.getLogger(__name__)
+
 
 class ChatService:
+    SUPPORTED_ENTITY_LABELS = {"Trademark", "SPU", "SKU", "Category1", "Category2", "Category3"}
+
     def __init__(self):
         self.graph = Neo4jGraph(
             url=NEO4J_CONFIG['uri'],
@@ -86,27 +93,30 @@ class ChatService:
         self.str_parser = StrOutputParser()
 
     # 核心聊天服务流程
-    def chat(self, question):
-        pass
-        # 1. 获取用户问题，生成cypher以及需要对齐的实体
-        question_cypher = self._get_question_cypher(question)
-        cypher = question_cypher["cypher_query"]
-        entities_to_align = question_cypher["entities_to_align"]
-        print(cypher)
-        print("对齐之前的实体名称：", entities_to_align)
+    def chat(self, question: str) -> str:
+        try:
+            question_cypher = self._get_question_cypher(question)
+            cypher = validate_readonly_cypher(question_cypher["cypher_query"])
+            entities_to_align = question_cypher.get("entities_to_align", [])
+            logger.info("Generated Cypher: %s", cypher)
+            logger.info("Entities before alignment: %s", entities_to_align)
 
-        # 2. 实体对齐，混合检索
-        aligned_entities = self._align_entities(entities_to_align)
-        print("对齐之后的实体名称：", aligned_entities)
+            aligned_entities = self._align_entities(entities_to_align)
+            logger.info("Entities after alignment: %s", aligned_entities)
 
-        # 3. 执行cypher，获取结果
-        result = self._execute_cypher(cypher, aligned_entities)
-        print("查询结果：", result)
+            result = self._execute_cypher(cypher, aligned_entities)
+            logger.info("Query returned %d rows.", len(result))
 
-        # 4. 结合结果，生成答案
-        answer = self._generate_answer(question, result)
-        print("生成的答案：", answer)
-        return answer
+            if not result:
+                return "没有在商品知识图谱中查询到足够信息，请换一种商品、品牌或属性描述。"
+
+            return self._generate_answer(question, result)
+        except UnsafeCypherError as error:
+            logger.warning("Blocked unsafe generated Cypher: %s", error)
+            return "当前问题生成的图查询未通过安全校验，请换一种问法或补充商品范围。"
+        except Exception:
+            logger.exception("GraphRAG chat failed.")
+            return "系统暂时无法完成图谱问答，请稍后重试。"
 
     # 获取用户问题，生成cypher以及需要对齐的实体
     def _get_question_cypher(self, question):
@@ -119,9 +129,10 @@ class ChatService:
                 知识图谱结构信息：{schema_info}
 
                 要求：
-                1. 生成参数化Cypher查询语句，用param_0, param_1等代替具体值
-                2. 识别需要对齐的实体
-                3. 必须严格使用以下JSON格式输出结果
+                1. 只能生成只读查询，允许 MATCH、OPTIONAL MATCH、WITH、UNWIND、RETURN，不允许 CREATE、MERGE、SET、DELETE、REMOVE、DROP、LOAD、CALL
+                2. 生成参数化Cypher查询语句，用 $param_0, $param_1 等代替具体值
+                3. 识别需要对齐的实体，label 只能从 Trademark、SPU、SKU、Category1、Category2、Category3 中选择
+                4. 必须严格使用以下JSON格式输出结果
                 {{
                  "cypher_query": "生成的Cypher语句",
                  "entities_to_align": [
@@ -147,10 +158,14 @@ class ChatService:
             entity_name = entity["entity"]
             # 获取实体类型
             entity_type = entity["label"]
+            if entity_type not in self.SUPPORTED_ENTITY_LABELS:
+                raise UnsafeCypherError(f"Unsupported entity label: {entity_type}.")
             # 获取实体的混合检索对象
             neo4j_vector = self.neo4j_vector[entity_type]
             # 混合检索
             results = neo4j_vector.similarity_search(entity_name, k=1)
+            if not results:
+                raise ValueError(f"No aligned entity found for {entity_type}: {entity_name}")
             aligned_entity = results[0].page_content
             # 覆盖原来的实体名称
             entities_to_align[index]["entity"] = aligned_entity
@@ -161,6 +176,7 @@ class ChatService:
     def _execute_cypher(self, cypher_query, aligned_entities):
         # 提取对齐后的实体
         params = {entity['param_name']: entity['entity'] for entity in aligned_entities}
+        ensure_declared_params(cypher_query, params)
         return self.graph.query(cypher_query, params=params)
 
     # 结合结果，生成答案

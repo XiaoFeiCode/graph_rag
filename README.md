@@ -176,6 +176,15 @@ uv run python -m scripts.create_indexes
 4. `ChatService._execute_cypher` 执行图查询。
 5. `ChatService._generate_answer` 结合查询结果生成自然语言回答。
 
+## 查询安全
+
+服务层会在执行 Cypher 前做只读校验：
+
+- 只允许单条查询语句。
+- 查询必须从 `MATCH`、`OPTIONAL MATCH`、`WITH` 或 `UNWIND` 等读子句开始。
+- 禁止 `CREATE`、`MERGE`、`SET`、`DELETE`、`REMOVE`、`DROP`、`LOAD`、`CALL` 等写入或过程调用关键字。
+- 查询必须包含 `RETURN`，且引用的 `$param_0`、`$param_1` 等参数必须由实体对齐阶段声明。
+
 ## 示例问题
 
 仓库提供了 `examples/questions.json` 作为最小样例图谱的测试问题，包括：

@@ -37,6 +37,10 @@ POST /api/chat
   Answer.message
 ```
 
+## Query Safety
+
+Before executing generated Cypher, the service validates that the query is a single read-only statement. Write clauses and procedure calls are blocked, and every `$param_n` referenced by Cypher must be declared by the entity alignment result.
+
 ## Demo Flow
 
 ```text
