@@ -1,0 +1,35 @@
+# Secrets and local configuration
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+*.egg-info/
+*.ipynb
+.ipynb_checkpoints/
+
+# Training artifacts and local data
+checkpoints/
+logs/
+data/ner/processed/
+*.safetensors
+*.pt
+*.pth
+*.bin
+
+# Keep the sample annotation dataset optional; uncomment before publishing if needed.
+# data/ner/raw/data.json
+
+# OS and IDE
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
