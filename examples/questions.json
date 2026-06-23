@@ -1,0 +1,22 @@
+[
+  {
+    "question": "有没有适合拍照的 Apple 手机？",
+    "expected_entities": ["Apple", "iPhone 15"],
+    "expected_answer_points": ["4800 万像素", "iPhone 15"]
+  },
+  {
+    "question": "华为 Mate 系列有什么卖点？",
+    "expected_entities": ["华为", "HUAWEI Mate 60"],
+    "expected_answer_points": ["卫星通信", "商务旗舰"]
+  },
+  {
+    "question": "推荐一个适合少油烹饪的厨房电器",
+    "expected_entities": ["美的 5L 空气炸锅"],
+    "expected_answer_points": ["低脂烹饪", "5L 大容量"]
+  },
+  {
+    "question": "iPhone 15 有哪些 SKU？",
+    "expected_entities": ["iPhone 15"],
+    "expected_answer_points": ["128GB 蓝色", "256GB 黑色"]
+  }
+]

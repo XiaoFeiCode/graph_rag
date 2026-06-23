@@ -37,6 +37,16 @@ POST /api/chat
   Answer.message
 ```
 
+## Demo Flow
+
+```text
+docker compose up -d
+  -> Neo4j service
+  -> scripts.create_indexes
+  -> scripts.seed_graph
+  -> scripts.smoke_query
+```
+
 ## Training Flow
 
 ```text

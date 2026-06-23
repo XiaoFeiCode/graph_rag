@@ -37,12 +37,14 @@ User question
 ## 目录结构
 
 ```text
+scripts/             # Demo 图谱初始化、索引创建和 smoke query
 src/
   configuration/     # 路径、模型、数据库和超参数配置
   datasync/          # MySQL -> Neo4j 数据同步
   ner/               # 商品文本 NER 数据处理、训练、评估和预测
   web/               # FastAPI 服务、GraphRAG 问答链路和静态聊天页
 data/                # 本地数据，不建议完整上传大规模处理产物
+examples/            # 示例问题和预期召回实体
 checkpoints/         # 本地模型权重目录
 docs/                # 架构设计与模块说明
 ```
@@ -58,7 +60,47 @@ copy .env.example .env
 
 编辑 `.env`，填入 DeepSeek、MySQL 和 Neo4j 配置。
 
-启动 Web 服务：
+### 最小 Demo
+
+最小 Demo 只依赖 Neo4j，用样例商品数据初始化一个小型电商知识图谱，并执行 smoke query 验证图谱可查询。
+
+启动 Neo4j：
+
+```bash
+docker compose up -d
+```
+
+创建约束、全文索引并写入样例数据：
+
+```bash
+uv run python -m scripts.seed_graph
+```
+
+执行图谱查询 smoke test：
+
+```bash
+uv run python -m scripts.smoke_query
+```
+
+Neo4j Browser：
+
+```text
+http://localhost:7474
+```
+
+默认账号密码来自 `.env.example`：
+
+```text
+neo4j / graph_rag_demo
+```
+
+### 启动问答服务
+
+问答服务需要安装 RAG 相关依赖、配置 DeepSeek API，并且需要 Neo4j 中存在对应图谱和索引。
+
+```bash
+uv sync --extra rag
+```
 
 ```bash
 uv run uvicorn src.web.app:app --host 0.0.0.0 --port 8000
@@ -71,6 +113,12 @@ http://localhost:8000
 ```
 
 ## 数据与训练
+
+NER 训练和推理需要安装 ML 相关依赖：
+
+```bash
+uv sync --extra ml
+```
 
 预处理 Label Studio 导出的 NER 标注数据：
 
@@ -114,6 +162,12 @@ uv run python -m src.datasync.text_sync
 uv run python -m src.web.utils
 ```
 
+如果只需要运行本地样例图谱的全文索引和约束，可使用轻量脚本：
+
+```bash
+uv run python -m scripts.create_indexes
+```
+
 ## 核心链路
 
 1. 用户在前端输入商品咨询问题。
@@ -121,6 +175,15 @@ uv run python -m src.web.utils
 3. `ChatService._align_entities` 使用 Neo4jVector 的 hybrid search 对齐商品、品牌和品类实体。
 4. `ChatService._execute_cypher` 执行图查询。
 5. `ChatService._generate_answer` 结合查询结果生成自然语言回答。
+
+## 示例问题
+
+仓库提供了 `examples/questions.json` 作为最小样例图谱的测试问题，包括：
+
+- 有没有适合拍照的 Apple 手机？
+- 华为 Mate 系列有什么卖点？
+- 推荐一个适合少油烹饪的厨房电器
+- iPhone 15 有哪些 SKU？
 
 ## 当前能力
 

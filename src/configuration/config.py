@@ -45,5 +45,5 @@ MYSQL_CONFIG = {
 
 NEO4J_CONFIG = {
     'uri': os.getenv("NEO4J_URI", "neo4j://localhost"),
-    'auth': (os.getenv("NEO4J_USER", "neo4j"), os.getenv("NEO4J_PASSWORD", ""))
+    'auth': (os.getenv("NEO4J_USER", "neo4j"), os.getenv("NEO4J_PASSWORD", "graph_rag_demo"))
 }
