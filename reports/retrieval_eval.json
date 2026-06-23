@@ -1,0 +1,169 @@
+{
+  "method": "neo4j_fulltext",
+  "top_k": 5,
+  "case_count": 4,
+  "metrics": {
+    "recall@5": 0.625,
+    "precision@5": 0.3,
+    "mrr": 0.55
+  },
+  "cases": [
+    {
+      "question": "有没有适合拍照的 Apple 手机？",
+      "expected_entities": [
+        "Apple",
+        "iPhone 15"
+      ],
+      "hits": [
+        {
+          "name": "轻薄机身",
+          "label": "Tag",
+          "score": 0.9555239677429199
+        },
+        {
+          "name": "手机数码",
+          "label": "Category1",
+          "score": 0.6301337480545044
+        },
+        {
+          "name": "手机通讯",
+          "label": "Category2",
+          "score": 0.6301337480545044
+        },
+        {
+          "name": "智能手机",
+          "label": "Category3",
+          "score": 0.6301337480545044
+        },
+        {
+          "name": "Apple",
+          "label": "Trademark",
+          "score": 0.5330593585968018
+        }
+      ],
+      "metrics": {
+        "expected_count": 2,
+        "hit_count": 5,
+        "matched_count": 1,
+        "recall": 0.5,
+        "precision": 0.2,
+        "mrr": 0.2,
+        "matched_entities": [
+          "apple"
+        ]
+      }
+    },
+    {
+      "question": "华为 Mate 系列有什么卖点？",
+      "expected_entities": [
+        "华为",
+        "HUAWEI Mate 60"
+      ],
+      "hits": [
+        {
+          "name": "华为",
+          "label": "Trademark",
+          "score": 0.8242262601852417
+        },
+        {
+          "name": "HUAWEI Mate 60 256GB 雅川青",
+          "label": "SKU",
+          "score": 0.5305643081665039
+        },
+        {
+          "name": "HUAWEI Mate 60",
+          "label": "SPU",
+          "score": 0.49662238359451294
+        }
+      ],
+      "metrics": {
+        "expected_count": 2,
+        "hit_count": 3,
+        "matched_count": 2,
+        "recall": 1.0,
+        "precision": 0.6666666666666666,
+        "mrr": 1.0,
+        "matched_entities": [
+          "huawei mate 60",
+          "华为"
+        ]
+      }
+    },
+    {
+      "question": "推荐一个适合少油烹饪的厨房电器",
+      "expected_entities": [
+        "美的 5L 空气炸锅"
+      ],
+      "hits": [
+        {
+          "name": "低脂烹饪",
+          "label": "Tag",
+          "score": 1.9110479354858398
+        },
+        {
+          "name": "厨房小电",
+          "label": "Category2",
+          "score": 0.9452006220817566
+        },
+        {
+          "name": "大容量电池",
+          "label": "Tag",
+          "score": 0.8637937307357788
+        },
+        {
+          "name": "家用电器",
+          "label": "Category1",
+          "score": 0.6301337480545044
+        },
+        {
+          "name": "美的 5L 空气炸锅 白色",
+          "label": "SKU",
+          "score": 0.4728594422340393
+        }
+      ],
+      "metrics": {
+        "expected_count": 1,
+        "hit_count": 5,
+        "matched_count": 0,
+        "recall": 0.0,
+        "precision": 0.0,
+        "mrr": 0.0,
+        "matched_entities": []
+      }
+    },
+    {
+      "question": "iPhone 15 有哪些 SKU？",
+      "expected_entities": [
+        "iPhone 15"
+      ],
+      "hits": [
+        {
+          "name": "iPhone 15",
+          "label": "SPU",
+          "score": 1.1209478378295898
+        },
+        {
+          "name": "iPhone 15 128GB 蓝色",
+          "label": "SKU",
+          "score": 0.6958234310150146
+        },
+        {
+          "name": "iPhone 15 256GB 黑色",
+          "label": "SKU",
+          "score": 0.6958234310150146
+        }
+      ],
+      "metrics": {
+        "expected_count": 1,
+        "hit_count": 3,
+        "matched_count": 1,
+        "recall": 1.0,
+        "precision": 0.3333333333333333,
+        "mrr": 1.0,
+        "matched_entities": [
+          "iphone 15"
+        ]
+      }
+    }
+  ]
+}

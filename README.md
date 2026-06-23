@@ -33,6 +33,7 @@
 - **GraphRAG 问答**：由 LLM 生成参数化 Cypher，执行图谱查询后再基于结构化结果生成回答。
 - **查询安全控制**：执行前校验 LLM 生成的 Cypher，只允许单条只读查询，阻断写入和过程调用。
 - **可复现 Demo**：内置样例商品图谱，可通过 `docker compose` 和 seed 脚本快速跑通。
+- **检索评估**：基于示例问题计算 Recall@K、Precision@K 和 MRR，输出 JSON 与 Markdown 报告。
 
 ## 系统架构
 
@@ -73,6 +74,7 @@ graph_rag/
 ├── src/
 │   ├── configuration/          # 路径、模型、数据库和超参数配置
 │   ├── datasync/               # MySQL -> Neo4j 数据同步
+│   ├── evaluation/             # 检索评估脚本
 │   ├── ner/                    # NER 数据处理、训练、评估和预测
 │   └── web/                    # FastAPI、GraphRAG 服务和前端页面
 ├── docker-compose.yml          # Neo4j 本地服务
@@ -295,6 +297,30 @@ LLM 生成的 Cypher 在执行前会经过只读校验：
 iPhone 15 有哪些 SKU？
 ```
 
+## 检索评估
+
+先初始化 Demo 图谱：
+
+```powershell
+docker compose up -d
+uv run python -m scripts.seed_graph
+```
+
+运行 Neo4j full-text baseline 评估：
+
+```powershell
+uv run python -m src.evaluation.retrieval_eval --top-k 5
+```
+
+输出文件：
+
+```text
+reports/retrieval_eval.json
+reports/retrieval_eval.md
+```
+
+当前指标用于验证评估链路和样例召回效果。后续接入向量检索、Hybrid Retrieval 或 Milvus 后，可以复用同一批 `examples/questions.json` 做对比。
+
 ## 开发验证
 
 ```powershell
@@ -303,6 +329,7 @@ python -m compileall -q src scripts tests main.py
 docker compose config
 uv run python -m scripts.seed_graph
 uv run python -m scripts.smoke_query
+uv run python -m src.evaluation.retrieval_eval --top-k 5
 ```
 
 ## 当前边界
@@ -311,11 +338,11 @@ uv run python -m scripts.smoke_query
 - 完整问答服务依赖 DeepSeek API、BGE embedding 模型和 Neo4j 向量索引。
 - `checkpoints/` 下的模型权重体积较大，默认不提交到 Git。
 - 当前 MySQL -> Neo4j 为批量同步流程，实时增量同步可以继续扩展 Debezium + Kafka。
-- 当前检索评估集尚未沉淀为独立报告，后续可补充 Recall@5、MRR、Precision@5 对比实验。
+- 当前检索评估基于小样例图谱，后续可扩展为更大规模商品 QA 测试集。
 
 ## Roadmap
 
-- 增加 Retrieval Evaluation：对比全文检索、向量检索和 Hybrid Retrieval。
+- 扩展 Retrieval Evaluation：对比全文检索、向量检索和 Hybrid Retrieval。
 - 将向量索引扩展到 Milvus，Neo4j 保留结构化关系推理。
 - 增加 Cypher 生成模板和错误重试策略。
 - 增加 Docker Compose 中的 MySQL 服务和初始化样例数据。
