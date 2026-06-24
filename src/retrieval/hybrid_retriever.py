@@ -80,12 +80,18 @@ class HybridRetriever:
             pairs, padding=True, truncation=True, return_tensors="pt"
         )
         with torch.no_grad():
-            scores = self._reranker_model(**inputs).logits.squeeze(-1).tolist()
+            outputs = self._reranker_model(**inputs)
+            logits = outputs.logits
+            if logits.dim() == 2:
+                scores = logits.squeeze(-1).tolist()
+            else:
+                scores = logits.tolist()
         if isinstance(scores, float):
             scores = [scores]
 
         for hit, score in zip(candidates, scores):
             hit.score = float(score)
+
         candidates.sort(key=lambda h: h.score, reverse=True)
         return candidates
 
@@ -93,7 +99,7 @@ class HybridRetriever:
         self,
         query: str,
         top_k: int = 5,
-        enable_rerank: bool = True,
+        enable_rerank: bool = False,  # Reranker off by default for entity alignment
     ) -> list[RetrievalHit]:
         """Run multi-source recall → RRF fusion → optional rerank → top-k."""
         if not self._sources:

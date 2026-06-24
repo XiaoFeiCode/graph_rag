@@ -20,6 +20,7 @@ venv/
 checkpoints/
 logs/
 models/
+reports/
 data/ner/processed/
 *.safetensors
 *.pt
