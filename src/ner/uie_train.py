@@ -4,7 +4,7 @@ Model: damo/nlp_structbert_siamese-uie_chinese-base (StructBERT + Siamese UIE)
 Task: Structured extraction — text → <entity_type>span</entity_type>
 Schema: 商品名, 品牌, 品类, 属性, 卖点, 规格
 
-Data format (JSONL): {"text": "...", "record": "<卖点>text</卖点><商品名>text</商品名>"}
+Data format (JSONL): {"text": "...", "record": "<卖点>text</卖点>"}
 
 Usage on AutoDL:
     conda create -n uie python=3.12 -y && conda activate uie
@@ -16,11 +16,9 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
-import tempfile
 from pathlib import Path
 
-from modelscope.msdatasets import MsDataset
+from datasets import Dataset
 from modelscope.trainers import build_trainer
 from modelscope.utils.config import Config
 
@@ -41,20 +39,6 @@ def _load_jsonl(path: Path) -> list[dict]:
     return data
 
 
-def _save_jsonl(data: list[dict], path: Path) -> None:
-    with path.open("w", encoding="utf-8") as f:
-        for item in data:
-            f.write(json.dumps(item, ensure_ascii=False) + "\n")
-
-
-def _write_dataset_jsonl(records: list[dict], output_dir: Path, filename: str = "dataset.jsonl") -> Path:
-    """Write records to a JSONL file that ModelScope MsDataset can read."""
-    output_dir.mkdir(parents=True, exist_ok=True)
-    path = output_dir / filename
-    _save_jsonl(records, path)
-    return path
-
-
 def train() -> None:
     import torch
 
@@ -66,36 +50,23 @@ def train() -> None:
     valid_data = _load_jsonl(DATA_DIR / "valid.jsonl")
     print(f"Train: {len(train_data)}, Valid: {len(valid_data)}")
 
-    # Stage data for ModelScope MsDataset
-    tmpdir = Path(tempfile.mkdtemp(prefix="uie_data_"))
-    train_path = _write_dataset_jsonl(train_data, tmpdir / "train")
-    valid_path = _write_dataset_jsonl(valid_data, tmpdir / "validation")
+    train_ds = Dataset.from_list(train_data)
+    valid_ds = Dataset.from_list(valid_data)
 
-    # Load as MsDataset
-    dataset_dict = MsDataset.load(
-        str(tmpdir),
-        split=["train", "validation"],
-    )
-
-    # Build trainer with the SiameseUIETrainer
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
     kwargs = {
         "model": MODEL_ID,
-        "train_dataset": dataset_dict["train"],
-        "eval_dataset": dataset_dict["validation"],
+        "train_dataset": train_ds,
+        "eval_dataset": valid_ds,
         "work_dir": str(OUTPUT_DIR),
         "cfg_modify_fn": _cfg_modify_fn,
     }
 
-    trainer = build_trainer(
-        name="siamese-uie-trainer",
-        default_args=kwargs,
-    )
+    trainer = build_trainer(name="siamese-uie-trainer", default_args=kwargs)
 
     print("Starting training...")
     trainer.train()
-
     print(f"Training complete. Output: {OUTPUT_DIR}")
 
 
