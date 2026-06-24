@@ -34,8 +34,8 @@ from transformers import (
 from src.configuration.config import CHECKPOINTS_DIR, ROOT_DIR
 from src.configuration.config import UIE_TRAINING_CONFIG as CFG
 
-# Use StructBERT base from HuggingFace — same backbone as ModelScope UIE
-MODEL_ID = "uer/structbert-base-chinese"
+# ERNIE 3.0 Base — Baidu's Chinese pre-trained model, same family as UIE backbone
+MODEL_ID = "nghuyong/ernie-3.0-base-zh"
 DATA_DIR = ROOT_DIR / "data" / "uie"
 OUTPUT_DIR = CHECKPOINTS_DIR / "uie"
 MAX_LENGTH = CFG.get("max_length", 256)
