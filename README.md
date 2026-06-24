@@ -33,9 +33,9 @@
 
 - **商品知识图谱** — SKU、SPU、品牌、三级品类、平台属性、销售属性和商品标签全覆盖。
 - **数据同步链路** — MySQL 批量全量写入 + Debezium + Kafka CDC 增量消费，映射文件配置驱动。
-- **Hybrid Retrieval** — BGE 向量召回 + Neo4j full-text 全文检索 + Milvus 向量索引 + RRF 融合。
-- **NER 标签抽取** — 中文 BERT token classification（BIO），Label Studio 标注数据训练。
-- **GraphRAG 问答** — LLM 生成参数化 Cypher → 只读安全校验 → 图谱查询 → LLM 生成可追溯回答。
+- **Hybrid Retrieval** — BGE 向量召回 + Neo4j full-text 全文检索 + Milvus 向量索引 + RRF 融合 + BGE-Reranker 精排。
+- **NER / UIE 标签抽取** — 基于 Label Studio 标注数据，使用 ERNIE 3.0 进行信息抽取模型微调，实现商品名、品牌、品类、属性名等关键槽位识别。
+- **GraphRAG 问答** — LLM 生成参数化 Cypher → 只读安全校验 → 图谱查询 + 子图多跳扩展 → LLM 生成可追溯回答。
 - **查询安全控制** — 执行前校验 LLM 生成语句，禁止写入、多语句和未声明参数。
 
 ## 系统架构
@@ -56,10 +56,12 @@ flowchart TB
     MySQL[(MySQL gmall)] --> Sync[TableSync / TextSync]
     MySQL --> CDC[Debezium + Kafka CDC]
     CDC --> Sync
-    NER[BERT NER / Label Studio] --> Sync
+    NER[UIE / ERNIE Entity Extraction] --> Sync
     Sync --> Graph
     Graph --> Milvus[(Milvus Entity Index)]
     Milvus --> Hybrid
+    Graph --> Subgraph[Multi-hop Subgraph Expander]
+    Subgraph --> Executor
 ```
 
 ## 知识图谱可视化
@@ -140,17 +142,24 @@ graph_rag/
 │   │   └── utils.py               #   MySQLReader / Neo4jWriter
 │   ├── evaluation/                # 检索评估
 │   │   └── retrieval_eval.py
-│   ├── ner/                       # NER 训练、评估与预测
+│   ├── ner/                       # NER & UIE 信息抽取
 │   │   ├── preprocess.py
 │   │   ├── train.py
 │   │   ├── eval.py
-│   │   └── predict.py
-│   ├── retrieval/                 # Milvus 实体索引
-│   │   └── milvus_entity_store.py
+│   │   ├── predict.py
+│   │   ├── uie_preprocess.py       #   UIE 数据转换
+│   │   ├── uie_train.py            #   ERNIE 3.0 微调
+│   │   └── uie_predict.py          #   UIE 结构化抽取
+│   ├── retrieval/                 # Milvus 实体索引与检索
+│   │   ├── hybrid_retriever.py     #   RRF 融合 + Reranker
+│   │   ├── milvus_entity_store.py
+│   │   ├── search_factory.py       #   多路召回工厂
+│   │   └── subgraph_expander.py    #   多跳子图扩展
 │   └── web/                       # FastAPI 服务
 │       ├── app.py
 │       ├── service.py             #   GraphRAG 问答核心
 │       ├── cypher_guard.py        #   Cypher 只读安全校验
+│       ├── cypher_templates.py    #   预定义 Cypher 模板
 │       ├── schemas.py
 │       ├── utils.py               #   索引管理工具
 │       └── static/index.html      #   聊天前端页面

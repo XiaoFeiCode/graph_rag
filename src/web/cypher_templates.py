@@ -106,6 +106,15 @@ CYPHER_TEMPLATES = [
             {"param_name": "keyword", "description": "搜索关键词", "label": None},
         ],
     },
+    {
+        "name": "subgraph_recall",
+        "description": "全面了解某个品牌/商品/品类的所有关联信息（子图召回）",
+        "cypher": "__SUBGRAPH_EXPAND__",
+        "entity_slots": [
+            {"param_name": "entity", "description": "起点实体名称", "label": "SPU"},
+        ],
+        "expandable_labels": ["Trademark", "SPU", "Category3"],
+    },
 ]
 
 # Allow label=NONE for keyword slots that don't need entity alignment

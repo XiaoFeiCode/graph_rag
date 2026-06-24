@@ -101,9 +101,14 @@ class ChatService:
 
             aligned = self._align_template_entities(template, raw_entities)
             cypher = template["cypher"]
-            validate_readonly_cypher(cypher)  # safety net
 
-            result = self._execute_cypher(cypher, aligned)
+            # Subgraph recall: use multi-hop expansion
+            if cypher == "__SUBGRAPH_EXPAND__":
+                entity_type = raw_entities[0].get("label", "SPU") if raw_entities else "SPU"
+                result = self._expand_subgraph(entity_type, aligned)
+            else:
+                validate_readonly_cypher(cypher)
+                result = self._execute_cypher(cypher, aligned)
             logger.info("Template %s returned %d rows.", template_name, len(result))
 
             if not result:
@@ -246,6 +251,18 @@ class ChatService:
         output = self.llm.invoke(prompt)
         raw = output.content if hasattr(output, "content") else str(output)
         return self._parse_json(raw)
+
+    # ── Subgraph expansion ──────────────────────────────────────
+
+    def _expand_subgraph(self, entity_type: str, params: dict) -> list[dict]:
+        """Multi-hop graph expansion from a starting entity."""
+        from src.retrieval.subgraph_expander import get_expansion_cypher
+
+        entity_type = entity_type if entity_type in self.SUPPORTED_ENTITY_LABELS else "SPU"
+        cypher = get_expansion_cypher(entity_type)
+        if not cypher:
+            return []
+        return self.graph.query(cypher, params=params)
 
     # ── Shared ──────────────────────────────────────────────────
 
