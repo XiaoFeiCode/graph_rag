@@ -66,6 +66,14 @@ flowchart TB
 
 ![Neo4j 商品知识图谱](docs/ne4j_dispalay.png)
 
+## 运行效果
+
+问：Apple品牌的手机有什么推荐？
+
+答：为您推荐苹果品牌的两款手机——**Apple iPhone 12** 和 **Apple iPhone 16 Pro**。其中 iPhone 16 Pro 为最新旗舰机型，性能更强；iPhone 12 则是性价比较高的选择。请问您对哪一款更感兴趣？
+
+![问答运行效果](docs/question_display.png)
+
 ## 技术栈
 
 | 类别 | 组件 |
