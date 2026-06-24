@@ -7,7 +7,7 @@ from pathlib import Path
 from statistics import mean
 
 ROOT_DIR = Path(__file__).resolve().parents[2]
-DEFAULT_EXAMPLES = ROOT_DIR / "examples" / "questions.json"
+DEFAULT_EXAMPLES = ROOT_DIR / "data" / "questions.json"
 DEFAULT_OUT_DIR = ROOT_DIR / "reports"
 
 FULLTEXT_INDEXES = [

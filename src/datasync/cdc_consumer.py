@@ -157,7 +157,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--mapping",
         type=Path,
-        default=ROOT_DIR / "configs" / "cdc_table_mapping.json",
+        default=ROOT_DIR / "src" / "configuration" / "cdc_table_mapping.json",
     )
     return parser.parse_args()
 

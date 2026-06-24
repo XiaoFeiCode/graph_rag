@@ -1,216 +1,171 @@
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="">
-  <img alt="GraphRAG Commerce" src="" width="100%">
-</picture>
-
-<h1 align="center">GraphRAG Commerce</h1>
-<p align="center">
-  <b>基于 Hybrid Retrieval 与 GraphRAG 的电商知识增强问答系统</b>
-</p>
+# GraphRAG Commerce · 电商知识增强问答系统
 
 <p align="center">
-  <a href="https://github.com/XiaoFeiCode/graph_rag/stargazers"><img src="https://img.shields.io/github/stars/XiaoFeiCode/graph_rag?style=flat-square&color=yellow" alt="Stars"></a>
-  <a href="https://github.com/XiaoFeiCode/graph_rag/network/members"><img src="https://img.shields.io/github/forks/XiaoFeiCode/graph_rag?style=flat-square&color=orange" alt="Forks"></a>
-  <a href="https://github.com/XiaoFeiCode/graph_rag/issues"><img src="https://img.shields.io/github/issues/XiaoFeiCode/graph_rag?style=flat-square&color=red" alt="Issues"></a>
-  <a href="https://github.com/XiaoFeiCode/graph_rag/blob/main/LICENSE"><img src="https://img.shields.io/github/license/XiaoFeiCode/graph_rag?style=flat-square&color=blue" alt="License"></a>
+  <b>基于 Neo4j + Hybrid Retrieval + GraphRAG 的电商商品知识增强问答系统</b>
 </p>
 
 <p align="center">
   <img src="https://img.shields.io/badge/Python-3.12+-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python">
   <img src="https://img.shields.io/badge/PyTorch-2.3+-EE4C2C?style=flat-square&logo=pytorch&logoColor=white" alt="PyTorch">
   <img src="https://img.shields.io/badge/Neo4j-5.x-4581C3?style=flat-square&logo=neo4j&logoColor=white" alt="Neo4j">
-  <img src="https://img.shields.io/badge/Milvus-2.4+-00BEBE?style=flat-square&logo=milvus&logoColor=white" alt="Milvus">
   <img src="https://img.shields.io/badge/FastAPI-0.111+-009688?style=flat-square&logo=fastapi&logoColor=white" alt="FastAPI">
   <img src="https://img.shields.io/badge/LangChain-0.2+-1C3C3C?style=flat-square&logo=langchain&logoColor=white" alt="LangChain">
-  <img src="https://img.shields.io/badge/Transformers-4.41+-FFD21E?style=flat-square&logo=huggingface&logoColor=black" alt="Transformers">
-  <img src="https://img.shields.io/badge/Kafka-2.5+-231F20?style=flat-square&logo=apachekafka&logoColor=white" alt="Kafka">
-  <img src="https://img.shields.io/badge/Debezium-Connect-4EA94B?style=flat-square&logo=debian&logoColor=white" alt="Debezium">
   <img src="https://img.shields.io/badge/Docker-Compose-2496ED?style=flat-square&logo=docker&logoColor=white" alt="Docker">
-  <img src="https://img.shields.io/badge/uv-Package%20Manager-DE5FE9?style=flat-square" alt="uv">
+  <img src="https://img.shields.io/badge/License-MIT-blue?style=flat-square" alt="License">
 </p>
 
 ---
 
-## 目录
+## 项目概述
 
-- [项目背景](#项目背景)
-- [核心亮点](#核心亮点)
-- [系统架构](#系统架构)
-- [效果展示](#效果展示)
-- [项目结构](#项目结构)
-- [快速开始](#快速开始)
-- [API 文档](#api-文档)
-- [配置说明](#配置说明)
-- [高级用法](#高级用法)
-  - [数据同步](#数据同步)
-  - [CDC 增量同步](#cdc-增量同步)
-  - [NER 训练与评估](#ner-训练与评估)
-  - [UIE 商品信息抽取](#uie-商品信息抽取)
-  - [Milvus 实体索引](#milvus-实体索引)
-  - [检索评估](#检索评估)
-- [查询安全](#查询安全)
-- [开发验证](#开发验证)
-- [当前边界与路线图](#当前边界与路线图)
-- [贡献指南](#贡献指南)
-- [License](#license)
+针对电商场景中**商品属性长尾**、**关键词检索召回不足**以及**大模型幻觉**问题，设计并实现基于 Hybrid Retrieval 与 GraphRAG 的知识增强问答系统。通过结构化图谱检索与向量召回融合，提高商品属性问答准确率与知识覆盖能力。
 
----
+当前项目包含完整的图谱构建、NER 标签抽取、Hybrid Retrieval 实体对齐、GraphRAG 问答服务和可运行 Demo：
 
-## 项目背景
+- 基于 Neo4j 构建商品知识图谱，完成 SKU/SPU、品牌、品类、属性及标签的实体关系建模。
+- 基于 Debezium + Kafka 搭建 MySQL → Neo4j 实时同步链路，支持批量全量和 CDC 增量写入。
+- 基于 BGE Embedding + BM25 构建 Hybrid Retrieval 混合检索框架，采用 RRF 融合稀疏召回与向量召回结果。
+- 基于 BERT 训练中文商品标签 NER 模型，从商品描述中抽取卖点、规格和场景标签。
+- 基于 LangChain + DeepSeek 实现 LLM 参数化 Cypher 生成、只读安全校验和图谱问答。
+- 构建电商长尾商品 QA 测试集，相比 BM25 单路检索，Recall@5 提升 **17.6%**，Precision@5 提升 **10.8%**。
 
-针对电商场景中**商品属性长尾**、**关键词检索召回不足**以及**大模型幻觉**问题，设计基于 Hybrid Retrieval 与 GraphRAG 的知识增强问答系统，通过结构化图谱检索与向量召回融合，提高商品属性问答准确率与知识覆盖能力。
+## 核心能力
 
-当前项目将商品、品牌、SKU/SPU、品类、属性和标签建模为知识图谱，通过图查询保证结构化关系的准确性，通过向量检索和全文检索提升实体对齐能力，最终由 LLM 基于图谱查询结果生成可追溯的自然语言回答。
-
----
-
-## 核心亮点
-
-- **商品知识图谱构建与实时同步** — 基于 Neo4j 构建商品知识图谱，完成 SKU/SPU、品牌、品类及商品属性等实体关系建模，并基于 Debezium + Kafka 搭建 MySQL → Neo4j 实时同步链路。
-
-- **Hybrid Retrieval 混合检索框架** — 基于 BGE Embedding + BM25 构建混合检索框架，采用 RRF 融合稀疏召回与向量召回结果，结合 Milvus 向量索引与 BGE-Reranker 精排提升 Top-K 证据相关性。
-
-- **信息抽取与参数化 Cypher 生成** — 基于 Label Studio 构建商品 Query 实体抽取与属性识别标注数据，采用 UIE（ERNIE）进行信息抽取模型微调，实现商品名、品牌、品类、属性名等关键槽位识别；基于识别结果与预定义 Cypher 模板生成参数化查询，实现图路径扩展与子图召回。
-
-- **检索评估与效果提升** — 构建电商长尾商品属性 QA 测试集，采用 Recall@5、MRR、Precision@5 评估检索效果；相比 BM25 单路检索，**Recall@5 提升 17.6%，Precision@5 提升 10.8%**。
-
----
+- **商品知识图谱** — SKU、SPU、品牌、三级品类、平台属性、销售属性和商品标签全覆盖。
+- **数据同步链路** — MySQL 批量全量写入 + Debezium + Kafka CDC 增量消费，映射文件配置驱动。
+- **Hybrid Retrieval** — BGE 向量召回 + Neo4j full-text 全文检索 + Milvus 向量索引 + RRF 融合。
+- **NER 标签抽取** — 中文 BERT token classification（BIO），Label Studio 标注数据训练。
+- **GraphRAG 问答** — LLM 生成参数化 Cypher → 只读安全校验 → 图谱查询 → LLM 生成可追溯回答。
+- **查询安全控制** — 执行前校验 LLM 生成语句，禁止写入、多语句和未声明参数。
 
 ## 系统架构
 
 ```mermaid
 flowchart TB
-    User[👤 用户问题] --> API[FastAPI /api/chat]
-    API --> Generator[🤖 LLM Cypher Generator]
-    Generator --> Guard[🔒 Read-only Cypher Guard]
-    Generator --> Entity[🔍 Entity Alignment]
+    User[用户问题] --> API[FastAPI /api/chat]
+    API --> Generator[LLM Cypher Generator]
+    Generator --> Guard[Read-only Cypher Guard]
+    Generator --> Entity[Entity Alignment]
     Entity --> Hybrid[Neo4jVector Hybrid Retrieval]
     Hybrid --> Graph[(Neo4j 商品知识图谱)]
     Guard --> Executor[Graph Query Executor]
     Executor --> Graph
-    Graph --> Answer[🤖 LLM Answer Generator]
+    Graph --> Answer[LLM Answer Generator]
     Answer --> API
 
     MySQL[(MySQL gmall)] --> Sync[TableSync / TextSync]
     MySQL --> CDC[Debezium + Kafka CDC]
     CDC --> Sync
-    Label[Label Studio JSON] --> NER[BERT NER / UIE]
-    NER --> Sync
+    NER[BERT NER / Label Studio] --> Sync
     Sync --> Graph
     Graph --> Milvus[(Milvus Entity Index)]
     Milvus --> Hybrid
 ```
 
-> **问答流程**：用户提问 → LLM 生成参数化 Cypher → 实体对齐（Hybrid Retrieval） → 只读安全校验 → 图谱查询 → LLM 基于结构化结果生成可追溯答案。
+## 运行效果
 
----
+![Neo4j 商品知识图谱](docs/ne4j_dispalay.png)
 
-## 效果展示
+## 技术栈
 
-### Neo4j 商品知识图谱
-
-![Neo4j 商品知识图谱](display_imgs/ne4j_dispalay.png)
-
-> 示例图谱覆盖三级品类、品牌、SPU、SKU、标签及销售属性关系，使用 `scripts/seed_graph.py` 一键初始化。如果已有真实 MySQL 数据，可直接走 [数据同步](#数据同步) 链路写入完整图谱。
-
----
+| 类别 | 组件 |
+| --- | --- |
+| 图数据库 | Neo4j 5.x |
+| 向量数据库 | Milvus 2.4+ |
+| 大模型 | DeepSeek (via LangChain) |
+| Embedding | BAAI/bge-large-zh-v1.5 |
+| NER 模型 | google-bert/bert-base-chinese |
+| Web 框架 | FastAPI |
+| 消息队列 | Kafka + Debezium Connect |
+| 依赖管理 | uv (pyproject.toml) |
+| 容器化 | Docker Compose |
 
 ## 项目结构
 
 ```text
 graph_rag/
-├── configs/
-│   ├── cdc_table_mapping.json       # Debezium 表 → 图谱映射
-│   └── uie_product_tag.yaml         # UIE 商品抽取训练配置
 ├── data/
-│   ├── demo/catalog.json            # 示例商品图谱数据（快速体验）
-│   ├── gmall.sql                    # MySQL 业务库建表与数据
-│   └── ner/                         # NER 标注与预处理数据
-│       ├── description.txt          #   商品描述原始文本
-│       └── raw/data.json            #   Label Studio BIO 标注数据
-├── display_imgs/
-│   └── ne4j_dispalay.png            # Neo4j 图谱可视化截图
-├── examples/
-│   └── questions.json               # 测试问题与预期实体
+│   ├── demo/catalog.json          # 示例商品图谱数据
+│   ├── ner/                       # NER 训练与标注数据
+│   │   ├── description.txt        #   商品描述原始文本
+│   │   └── raw/data.json          #   Label Studio BIO 标注数据
+│   ├── questions.json             # 问答测试用例
+│   └── gmall.sql                  # MySQL 业务库建表与数据
+├── docs/
+│   └── ne4j_dispalay.png          # Neo4j 图谱可视化截图
 ├── scripts/
-│   ├── create_indexes.py            # Neo4j 约束与全文索引创建
-│   ├── seed_graph.py                # 示例图谱一键写入
-│   ├── sync_milvus_entities.py      # Neo4j 实体 → Milvus 同步
+│   ├── create_indexes.py          # Neo4j 约束与全文索引
+│   ├── seed_graph.py              # 示例图谱一键写入
+│   ├── sync_milvus_entities.py    # Neo4j 实体同步到 Milvus
 │   ├── register_debezium_connector.py
-│   └── neo4j_client.py              # Neo4j driver 上下文管理器
+│   └── neo4j_client.py            # Neo4j driver 上下文管理器
 ├── src/
-│   ├── configuration/config.py      # 全局配置（路径/模型/数据库）
-│   ├── datasync/                    # MySQL → Neo4j 数据同步
-│   │   ├── table_sync.py            #   批量全量同步
-│   │   ├── cdc_consumer.py          #   CDC 增量消费
-│   │   ├── text_sync.py             #   NER 标签抽取 → Tag 节点
-│   │   └── utils.py                 #   MySQLReader / Neo4jWriter
-│   ├── evaluation/                  # 检索评估
-│   │   └── retrieval_eval.py        #   Recall / Precision / MRR 报告
-│   ├── ner/                         # NER 数据处理、训练、评估、预测
+│   ├── configuration/             # 全局配置与映射文件
+│   │   ├── config.py
+│   │   ├── cdc_table_mapping.json
+│   │   └── uie_product_tag.yaml
+│   ├── datasync/                  # MySQL → Neo4j 数据同步
+│   │   ├── table_sync.py          #   批量全量同步
+│   │   ├── cdc_consumer.py        #   CDC 增量消费
+│   │   ├── text_sync.py           #   NER 标签抽取写入
+│   │   └── utils.py               #   MySQLReader / Neo4jWriter
+│   ├── evaluation/                # 检索评估
+│   │   └── retrieval_eval.py
+│   ├── ner/                       # NER 训练、评估与预测
 │   │   ├── preprocess.py
 │   │   ├── train.py
 │   │   ├── eval.py
-│   │   ├── predict.py
-│   ├── retrieval/                   # Milvus 实体索引与检索
+│   │   └── predict.py
+│   ├── retrieval/                 # Milvus 实体索引
 │   │   └── milvus_entity_store.py
-│   └── web/                         # FastAPI 服务与前端
-│       ├── app.py                   #   应用入口
-│       ├── service.py               #   GraphRAG 问答服务
-│       ├── cypher_guard.py          #   Cypher 只读安全校验
-│       ├── schemas.py               #   Pydantic 请求/响应模型
-│       ├── utils.py                 #   索引管理工具
-│       └── static/index.html        #   聊天前端页面
+│   └── web/                       # FastAPI 服务
+│       ├── app.py
+│       ├── service.py             #   GraphRAG 问答核心
+│       ├── cypher_guard.py        #   Cypher 只读安全校验
+│       ├── schemas.py
+│       ├── utils.py               #   索引管理工具
+│       └── static/index.html      #   聊天前端页面
 ├── tests/
-│   ├── test_cypher_guard.py
-│   ├── test_cdc_consumer.py
-│   └── test_retrieval_eval.py
-├── docker-compose.yml               # Neo4j
-├── docker-compose.cdc.yml           # MySQL + Kafka + Debezium
-├── docker-compose.milvus.yml        # Milvus standalone
+├── docker-compose.yml             # Neo4j
+├── docker-compose.cdc.yml         # MySQL + Kafka + Debezium
+├── docker-compose.milvus.yml      # Milvus standalone
 ├── pyproject.toml
-├── uv.lock
-└── README.md
+├── .env.example
+├── main.py
+└── LICENSE
 ```
 
----
-
-## 快速开始
-
-### 环境要求
+## 环境要求
 
 | 组件 | 说明 |
 | --- | --- |
 | Python | 3.12+ |
 | uv | Python 包管理器 |
 | Docker + Compose | 运行 Neo4j / Milvus / CDC 基础设施 |
+| MySQL | 5.7+（数据同步时需要） |
+| DeepSeek API Key | 启动问答服务时需要 |
 
-> **Windows 用户**：以下命令使用 PowerShell 语法，Linux/macOS 用户将 `Copy-Item` 替换为 `cp`。
+## 快速开始
 
-> 💡 **两种使用方式**：
-> - **快速体验**：使用内置 `data/demo/catalog.json` 示例图谱，无需 MySQL，按步骤 1-7 执行即可
-> - **真实数据**：使用 `data/gmall.sql` 导入 MySQL 后走 [数据同步](#数据同步) 链路写入完整图谱，再启动问答服务
+> 两种使用方式：
+> - **快速体验**：使用内置 `data/demo/catalog.json` 示例图谱，无需 MySQL
+> - **真实数据**：使用 `data/gmall.sql` 导入 MySQL，走完整数据同步链路
 
-### 1. 克隆项目
+### 1. 安装依赖
 
 ```bash
 git clone https://github.com/XiaoFeiCode/graph_rag.git
 cd graph_rag
-```
-
-### 2. 安装依赖
-
-```powershell
 uv sync --locked
 ```
 
-### 3. 配置环境变量
+### 2. 配置环境变量
 
-```powershell
-Copy-Item .env.example .env
+```bash
+cp .env.example .env
 ```
 
-编辑 `.env`，至少确保以下配置正确：
+确保 Neo4j 连接配置正确：
 
 ```text
 NEO4J_URI=neo4j://localhost
@@ -218,54 +173,48 @@ NEO4J_USER=neo4j
 NEO4J_PASSWORD=graph_rag_demo
 ```
 
-### 4. 启动 Neo4j
+### 3. 启动 Neo4j
 
-```powershell
+```bash
 docker compose up -d
 ```
 
-> Neo4j Browser 访问 http://localhost:7474（默认 neo4j / graph_rag_demo）
+Neo4j Browser：http://localhost:7474（默认 `neo4j` / `graph_rag_demo`）
 
-### 5. 初始化示例图谱（可选）
+### 4. 初始化图谱
 
-> 如果你没有 MySQL 业务数据，可以使用内置的示例图谱快速体验。已有真实数据请跳到 [数据同步](#数据同步)。
+**方式一：示例图谱（快速体验）**
 
-```powershell
+```bash
 uv run python -m scripts.seed_graph
 ```
 
-### 6. 启动问答服务
+**方式二：真实业务数据**
 
-安装 RAG 依赖并在 `.env` 中配置 DeepSeek API：
+```bash
+# 导入 MySQL 业务数据
+mysql -u root -p gmall < data/gmall.sql
 
-```powershell
+# 全量同步到 Neo4j
+uv run python -m src.datasync.table_sync
+```
+
+### 5. 启动问答服务
+
+```bash
 uv sync --extra rag
-```
-
-编辑 `.env`，添加：
-
-```text
-DEEPSEEK_API_KEY=你的API_KEY
-DEEPSEEK_BASE_URL=https://api.deepseek.com
-```
-
-启动服务：
-
-```powershell
 uv run uvicorn src.web.app:app --host 0.0.0.0 --port 8000
 ```
 
-打开浏览器访问 **http://localhost:8000** 即可使用聊天界面。
+打开浏览器访问 **http://localhost:8000** 使用聊天界面。
 
----
-
-## API 文档
+## API 接口
 
 ### `POST /api/chat`
 
 电商商品问答接口。
 
-**Request**
+**请求体**
 
 ```json
 {
@@ -273,11 +222,7 @@ uv run uvicorn src.web.app:app --host 0.0.0.0 --port 8000
 }
 ```
 
-| 字段 | 类型 | 必填 | 说明 |
-| --- | --- | --- | --- |
-| `message` | `string` | 是 | 用户自然语言问题 |
-
-**Response**
+**响应体**
 
 ```json
 {
@@ -285,93 +230,90 @@ uv run uvicorn src.web.app:app --host 0.0.0.0 --port 8000
 }
 ```
 
-| 字段 | 类型 | 说明 |
-| --- | --- | --- | --- |
-| `message` | `string` | 基于图谱查询结果生成的回答 |
-
-**状态码**
-
-| 状态码 | 说明 |
-| --- | --- |
-| `200` | 成功返回 |
-| `4xx/5xx` | 返回错误信息文本 |
-
 **内部流程**
 
 1. LLM 解析用户问题，生成参数化 Cypher 查询语句
-2. 提取需要对齐的实体（品牌/品类/SPU/SKU）进行 Hybrid Retrieval
+2. Hybrid Retrieval 对齐实体（品牌/品类/SPU/SKU）
 3. 只读安全校验（禁止写入/多语句/未声明参数）
 4. 执行图谱查询
-5. LLM 基于查询结果生成自然语言回答
-
-**示例问题**（`examples/questions.json`）
-
-| 问题 | 预期实体 |
-| --- | --- |
-| 有没有适合拍照的 Apple 手机？ | Apple |
-| 华为 Mate 系列有什么卖点？ | 华为, Mate |
-| 推荐一个适合少油烹饪的厨房电器 | — |
-| iPhone 15 有哪些 SKU？ | iPhone 15 |
-
----
+5. LLM 基于结构化结果生成回答
 
 ## 配置说明
 
+核心环境变量（`.env`）：
+
 | 变量 | 用途 | 默认值 |
 | --- | --- | --- |
-| `DEEPSEEK_API_KEY` | DeepSeek API Key | (必填) |
+| `DEEPSEEK_API_KEY` | DeepSeek API Key | （必填） |
 | `DEEPSEEK_BASE_URL` | API 地址 | `https://api.deepseek.com` |
 | `NEO4J_URI` | Neo4j Bolt 连接 | `neo4j://localhost` |
 | `NEO4J_USER` | Neo4j 用户名 | `neo4j` |
 | `NEO4J_PASSWORD` | Neo4j 密码 | `graph_rag_demo` |
 | `MYSQL_HOST` | MySQL 地址 | `localhost` |
-| `MYSQL_PORT` | MySQL 端口 | `3306` |
-| `MYSQL_USER` | MySQL 用户名 | `root` |
-| `MYSQL_PASSWORD` | MySQL 密码 | — |
 | `MYSQL_DB` | 数据库名称 | `gmall` |
 | `MODEL_NAME` | NER 预训练模型 | `google-bert/bert-base-chinese` |
 | `CDC_KAFKA_BOOTSTRAP_SERVERS` | Kafka 地址 | `localhost:9092` |
 | `MILVUS_URI` | Milvus 地址 | `http://localhost:19530` |
-| `MILVUS_COLLECTION` | Milvus Collection | `commerce_entities` |
-| `UIE_MODEL_ID` | ModelScope UIE 模型 | `iic/nlp_structbert_siamese-uie_chinese-base` |
 
-> ⚠️ **请勿提交真实的 `.env` 文件到 Git。**
+完整配置项见 `.env.example`。
 
----
+## 数据同步
 
-## 高级用法
+### 批量全量同步
 
-### 数据同步
-
-从 MySQL 全量同步商品、品牌、品类和属性到 Neo4j：
-
-```powershell
-# 1. 导入 MySQL 业务数据（如果本地还没有）
-mysql -u root -p gmall < data/gmall.sql
-
-# 2. 全量同步到 Neo4j
+```bash
 uv run python -m src.datasync.table_sync
 ```
 
-使用 NER 模型从商品描述抽取标签写入 `Tag` 节点：
+同步范围：三级品类、品牌、SPU/SKU、平台属性、销售属性及相互关系。
 
-```powershell
+### NER 标签抽取
+
+```bash
 uv sync --extra ml
-uv run python -m src.datasync.text_sync
+uv run python -m src.ner.preprocess    # 预处理标注数据
+uv run python -m src.ner.train         # 训练
+uv run python -m src.ner.eval          # 评估
+uv run python -m src.datasync.text_sync   # 抽取标签写入 Neo4j
 ```
 
 ### CDC 增量同步
 
-```powershell
-docker compose -f docker-compose.cdc.yml up -d    # 启动基础设施
+```bash
+docker compose -f docker-compose.cdc.yml up -d
 uv sync --extra cdc
-uv run python -m scripts.register_debezium_connector   # 注册 connector
-uv run python -m src.datasync.cdc_consumer              # 启动消费
+uv run python -m scripts.register_debezium_connector
+uv run python -m src.datasync.cdc_consumer
 ```
 
-> 表 → 图谱映射维护在 `configs/cdc_table_mapping.json`。
+表到图谱映射维护在 `src/configuration/cdc_table_mapping.json`。
 
-### NER 训练与评估
+## 检索评估
+
+```bash
+uv run python -m src.evaluation.retrieval_eval --top-k 5
+```
+
+报告输出至 `reports/retrieval_eval.json` 和 `reports/retrieval_eval.md`。
+
+评估指标：
+
+| 指标 | 说明 |
+| --- | --- |
+| Recall@5 | 期望实体在前 5 条结果中被命中的比例 |
+| Precision@5 | 前 5 条结果中命中期望实体的比例 |
+| MRR | 第一个命中实体的排名倒数均值 |
+
+## NER 训练配置
+
+| 配置项 | 当前值 |
+| --- | --- |
+| Backbone | `google-bert/bert-base-chinese` |
+| 任务 | 商品文本 BIO 序列标注（B / I / O） |
+| Epochs | 5 |
+| Batch Size | 2 |
+| Learning Rate | 7e-6 |
+| Mixed Precision | fp16 |
 
 训练数据位于 `data/ner/`：
 
@@ -380,130 +322,24 @@ uv run python -m src.datasync.cdc_consumer              # 启动消费
 | `data/ner/description.txt` | 商品描述原始文本（85KB） |
 | `data/ner/raw/data.json` | Label Studio BIO 标注数据（732KB） |
 
-```powershell
-uv sync --extra ml
-uv run python -m src.ner.preprocess    # 预处理标注数据
-uv run python -m src.ner.train         # 训练
-uv run python -m src.ner.eval          # 评估
-uv run python -m src.ner.predict       # 命令行预测
-```
-
-| 配置项 | 值 |
-| --- | --- |
-| Backbone | `google-bert/bert-base-chinese` |
-| 任务 | 商品文本 BIO 序列标注 |
-| Epochs | 5 |
-| Batch Size | 2 |
-| Learning Rate | 7e-6 |
-| Mixed Precision | fp16 |
-
-### UIE 商品信息抽取
-
-```powershell
-uv sync --extra uie
-```
-
-### Milvus 实体索引
-
-```powershell
-docker compose -f docker-compose.milvus.yml up -d
-uv sync --extra milvus
-uv run python -m scripts.sync_milvus_entities
-```
-
-### 检索评估
-
-```powershell
-uv run python -m src.evaluation.retrieval_eval --top-k 5
-```
-
-报告输出至 `reports/retrieval_eval.json` 和 `reports/retrieval_eval.md`。
-
----
-
 ## 查询安全
 
-LLM 生成的 Cypher 在执行前经过多层校验（`src/web/cypher_guard.py`）：
+LLM 生成的 Cypher 在执行前经过多层校验：
 
-- ✅ 只允许**单条**查询语句
-- ✅ 必须以 `MATCH`、`OPTIONAL MATCH`、`WITH`、`UNWIND` 等读子句开头
+- ✅ 只允许单条查询语句
+- ✅ 必须以 `MATCH`、`OPTIONAL MATCH`、`WITH`、`UNWIND` 开头
 - ✅ 必须包含 `RETURN`
-- ✅ 禁写 — `CREATE`、`MERGE`、`SET`、`DELETE`、`REMOVE`、`DROP`、`LOAD`、`CALL`
-- ✅ 引用的 `$param_0`、`$param_1` 等必须由实体对齐阶段声明
+- ✅ 禁止 `CREATE`、`MERGE`、`SET`、`DELETE` 等写入操作
+- ✅ 参数必须由实体对齐阶段声明
 
-```python
-# 示例：合法
-"MATCH (n:SPU {name: $param_0}) RETURN n.name AS name"
+## 路线图
 
-# 示例：被拦截
-"MATCH (n) DELETE n RETURN n"
-"MATCH (n) RETURN n; MATCH (m) RETURN m"
-```
-
----
-
-## 开发验证
-
-```bash
-# 单元测试
-python -m unittest tests.test_cypher_guard
-
-# 编译检查
-python -m compileall -q src scripts tests main.py
-
-# Docker Compose 配置检查
-docker compose config
-docker compose -f docker-compose.cdc.yml config
-docker compose -f docker-compose.milvus.yml config
-```
-
----
-
-## 当前边界与路线图
-
-### 当前边界
-
-- 示例图谱为小样例数据，用于快速验证图谱建模、索引和查询链路。完整业务数据需通过 [数据同步](#数据同步) 从 MySQL 导入。
-- 完整问答依赖 DeepSeek API、BGE Embedding 和 Neo4j 向量索引。
-- `checkpoints/` 下模型权重不提交 Git。
-- MySQL → Neo4j 支持批量同步和 CDC 消费，业务表覆盖可继续扩展。
-- UIE 和 Milvus 为可选扩展能力。
-
-### 路线图
-
-- [ ] 扩展 Retrieval Evaluation：Full-text vs Vector vs Hybrid 三路对比
-- [ ] 将 Milvus + Reranker 检索结果接入 GraphRAG 实体对齐主链路
-- [ ] 增加 Cypher 生成模板与错误重试策略
-- [ ] 扩展 CDC 表映射覆盖价格、库存和销售属性变更
-- [ ] 增加 GraphRAG API 集成测试与 CI
-
----
-
-## 贡献指南
-
-欢迎 Issue 和 PR。
-
-1. **Fork** 本仓库
-2. 创建特性分支：`git checkout -b feature/amazing-feature`
-3. 提交变更：`git commit -m 'feat: add amazing feature'`
-4. 推送分支：`git push origin feature/amazing-feature`
-5. 提交 **Pull Request**
-
-提交前请确保：
-
-```bash
-python -m unittest discover tests
-python -m compileall -q src scripts tests main.py
-```
-
----
+- [ ] Full-text vs Vector vs Hybrid Retrieval 三路对比评估
+- [ ] Milvus + BGE-Reranker 接入 GraphRAG 实体对齐主链路
+- [ ] Cypher 生成模板与错误重试策略
+- [ ] CDC 表映射扩展：价格、库存和销售属性变更
+- [ ] 集成测试与 CI
 
 ## License
 
-本项目基于 [MIT License](LICENSE) 开源。
-
----
-
-<p align="center">
-  <sub>Built with ❤️ by <a href="https://github.com/XiaoFeiCode">XiaoFeiCode</a></sub>
-</p>
+MIT License · [XiaoFeiCode](https://github.com/XiaoFeiCode)
