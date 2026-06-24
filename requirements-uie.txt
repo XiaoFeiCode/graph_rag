@@ -1,8 +1,7 @@
-# UIE Training — AutoDL (pip handles transitive deps automatically)
-modelscope>=1.17
-torch>=2.3
-transformers>=4.41
-accelerate>=1.1
-datasets>=2.19
+# UIE Entity Extraction Training — StructBERT + BIO token classification
+# Backbone: uer/structbert-base-chinese (same as ModelScope UIE)
+torch>=2.0
+transformers>=4.30
+accelerate>=0.20
+datasets>=2.14
 evaluate>=0.4
-sacrebleu>=2.0

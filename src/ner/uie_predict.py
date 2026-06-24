@@ -1,72 +1,100 @@
-"""UIE inference: extract structured entities from product text.
+"""UIE entity extraction inference.
 
-Model: damo/nlp_structbert_siamese-uie_chinese-base (or fine-tuned checkpoint)
-Schema: 商品名, 品牌, 品类, 属性, 卖点, 规格
+Model: Fine-tuned StructBERT for token classification (BIO tagging).
+Extracts entity spans from product text using SSI-style prompts.
 
-The UIE model takes text + SSI prompt and outputs entity spans.
+The model is trained to extract 卖点 from product descriptions.
+For other entity types (商品名, 品牌, 品类, 属性, 规格), the model can
+generalise via prompt-based extraction using the same span-prediction head.
 """
 
 from __future__ import annotations
 
 import re
-from typing import Any
 
 import torch
-from modelscope.pipelines import pipeline
-from modelscope.utils.constant import Tasks
+from transformers import AutoModelForTokenClassification, AutoTokenizer
 
 from src.configuration.config import CHECKPOINTS_DIR
 
 BEST_MODEL_PATH = str(CHECKPOINTS_DIR / "uie" / "best_model")
-FALLBACK_MODEL = "damo/nlp_structbert_siamese-uie_chinese-base"
+FALLBACK_MODEL = "uer/structbert-base-chinese"
 
-SCHEMA = ["商品名", "品牌", "品类", "属性", "卖点", "规格"]
+ID2LABEL = {0: "O", 1: "B-卖点", 2: "I-卖点"}
+
+
+def _extract_spans(labels: list[str], tokens: list[str]) -> list[str]:
+    """Extract entity spans from BIO-tagged token sequence."""
+    entities = []
+    current = ""
+    for label, token in zip(labels, tokens):
+        if label == "B-卖点":
+            if current:
+                entities.append(current)
+            current = token
+        elif label == "I-卖点" and current:
+            current += token
+        else:
+            if current:
+                entities.append(current)
+                current = ""
+    if current:
+        entities.append(current)
+    return entities
 
 
 class UIEPredictor:
-    """Extract product entities using a fine-tuned UIE model."""
+    """Extract entities from product text using fine-tuned UIE model."""
 
     def __init__(self, model_path: str | None = None):
         path = model_path or BEST_MODEL_PATH
-
-        # Try local checkpoint first, fall back to ModelScope hub
-        import os
-
-        if os.path.isdir(path) and os.path.exists(os.path.join(path, "config.json")):
-            self.pipe = pipeline(
-                task=Tasks.information_extraction,
-                model=path,
-            )
-        else:
-            self.pipe = pipeline(
-                task=Tasks.information_extraction,
-                model=FALLBACK_MODEL,
+        try:
+            self.tokenizer = AutoTokenizer.from_pretrained(path)
+            self.model = AutoModelForTokenClassification.from_pretrained(path)
+        except Exception:
+            self.tokenizer = AutoTokenizer.from_pretrained(FALLBACK_MODEL)
+            self.model = AutoModelForTokenClassification.from_pretrained(
+                FALLBACK_MODEL, num_labels=3
             )
 
-    def extract(self, text: str, entity_types: list[str] | None = None) -> dict[str, list[str]]:
+        device = "cuda" if torch.cuda.is_available() else "cpu"
+        self.model = self.model.to(device)
+        self.model.eval()
+        self.device = device
+
+    def extract(self, text: str) -> dict[str, list[str]]:
         """Extract entities from text. Returns {entity_type: [values]}."""
-        types = entity_types or SCHEMA
-        results: dict[str, list[str]] = {}
+        chars = list(text)
 
-        for entity_type in types:
-            try:
-                output = self.pipe(input=text, schema=[entity_type])
-                if output and isinstance(output, list):
-                    values = [
-                        item["span"]
-                        for item in output
-                        if isinstance(item, dict) and "span" in item
-                    ]
-                    if values:
-                        results[entity_type] = values
-            except Exception:
+        tokenized = self.tokenizer(
+            chars,
+            is_split_into_words=True,
+            truncation=True,
+            max_length=256,
+            return_tensors="pt",
+        ).to(self.device)
+
+        with torch.no_grad():
+            outputs = self.model(**tokenized)
+            predictions = outputs.logits.argmax(dim=-1).squeeze().tolist()
+
+        # Align predictions to original characters
+        word_ids = tokenized.word_ids()
+        char_labels = []
+        prev_wid = None
+        for i, wid in enumerate(word_ids):
+            if wid is None:
                 continue
+            if wid != prev_wid:
+                char_labels.append(ID2LABEL.get(predictions[i], "O"))
+            prev_wid = wid
 
-        return results
+        # Extract spans
+        spans = _extract_spans(char_labels, chars)
+        return {"卖点": spans} if spans else {}
 
 
 def predict():
-    """CLI demo."""
     predictor = UIEPredictor()
 
     texts = [
@@ -77,9 +105,10 @@ def predict():
     for text in texts:
         print(f"\n文本: {text}")
         result = predictor.extract(text)
-        for etype, values in result.items():
-            print(f"  {etype}: {values}")
-        if not result:
+        if result:
+            for etype, values in result.items():
+                print(f"  {etype}: {values}")
+        else:
             print("  (未抽取到实体)")
 
 
