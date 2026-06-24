@@ -20,6 +20,7 @@ rag = [
     "langchain-huggingface>=0.1",
     "langchain-neo4j>=0.1",
     "neo4j-graphrag>=1.7",
+    "sentence-transformers>=3.0",
 ]
 cdc = [
     "confluent-kafka>=2.5",
