@@ -135,7 +135,6 @@ graph_rag/
 ├── scripts/
 │   ├── create_indexes.py            # Neo4j 约束与全文索引创建
 │   ├── seed_graph.py                # 示例图谱一键写入
-│   ├── smoke_query.py               # 图谱查询 smoke test
 │   ├── sync_milvus_entities.py      # Neo4j 实体 → Milvus 同步
 │   ├── register_debezium_connector.py
 │   └── neo4j_client.py              # Neo4j driver 上下文管理器
@@ -153,7 +152,6 @@ graph_rag/
 │   │   ├── train.py
 │   │   ├── eval.py
 │   │   ├── predict.py
-│   │   └── uie_train.py
 │   ├── retrieval/                   # Milvus 实体索引与检索
 │   │   └── milvus_entity_store.py
 │   └── web/                         # FastAPI 服务与前端
@@ -236,22 +234,7 @@ docker compose up -d
 uv run python -m scripts.seed_graph
 ```
 
-### 6. 验证
-
-```powershell
-uv run python -m scripts.smoke_query
-```
-
-输出示例：
-
-```text
-Node counts — Category1: 3, Category2: 6, Category3: 12, Trademark: 12, SPU: 12, SKU: 36
-Sample product: iPhone 15 (Apple)
-Sample product: HUAWEI Mate 60 (华为)
-Sample product: 美的 5L 空气炸锅 (美的)
-```
-
-### 7. 启动问答服务
+### 6. 启动问答服务
 
 安装 RAG 依赖并在 `.env` 中配置 DeepSeek API：
 
@@ -418,8 +401,6 @@ uv run python -m src.ner.predict       # 命令行预测
 
 ```powershell
 uv sync --extra uie
-uv run python -m scripts.download_uie_model   # 下载 UIE 模型
-uv run python -m src.ner.uie_train --dry-run   # 校验配置
 ```
 
 ### Milvus 实体索引
@@ -474,11 +455,6 @@ python -m compileall -q src scripts tests main.py
 docker compose config
 docker compose -f docker-compose.cdc.yml config
 docker compose -f docker-compose.milvus.yml config
-
-# 端到端 smoke test
-uv run python -m scripts.seed_graph
-uv run python -m scripts.smoke_query
-uv run python -m src.evaluation.retrieval_eval --top-k 5
 ```
 
 ---
