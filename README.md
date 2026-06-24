@@ -66,6 +66,8 @@ flowchart TB
 
 ![Neo4j 商品知识图谱](docs/ne4j_dispalay.png)
 
+![Milvus Docker 运行状态](docs/docker_milvus.png)
+
 ## 运行效果
 
 **示例问答流程**
