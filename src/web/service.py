@@ -4,10 +4,16 @@ from langchain_core.output_parsers import JsonOutputParser, StrOutputParser
 from langchain_core.prompts import PromptTemplate
 from langchain_deepseek import ChatDeepSeek
 from langchain_huggingface import HuggingFaceEmbeddings
-from langchain_neo4j import Neo4jGraph, Neo4jVector
-from neo4j_graphrag.types import SearchType
+from langchain_neo4j import Neo4jGraph
+from neo4j import GraphDatabase
 
-from src.configuration.config import EMBEDDING_MODEL_NAME, LLM_MODEL_NAME, NEO4J_CONFIG
+from src.configuration.config import EMBEDDING_MODEL_NAME, LLM_MODEL_NAME, MILVUS_CONFIG, NEO4J_CONFIG
+from src.retrieval.hybrid_retriever import HybridRetriever
+from src.retrieval.search_factory import (
+    make_milvus_vector_searcher,
+    make_neo4j_fulltext_searcher,
+    make_neo4j_vector_searcher,
+)
 from src.web.cypher_guard import UnsafeCypherError, ensure_declared_params, validate_readonly_cypher
 
 logger = logging.getLogger(__name__)
@@ -17,26 +23,36 @@ class EntityAlignmentError(ValueError):
     """Raised when a query entity cannot be aligned to any graph node."""
 
 
+def _try_init_milvus():
+    """Try to initialise Milvus store; return None if unavailable."""
+    try:
+        from src.retrieval.milvus_entity_store import MilvusEntityStore
+
+        store = MilvusEntityStore()
+        store.ensure_collection()
+        return store
+    except Exception:
+        logger.warning("Milvus unavailable, falling back to Neo4j-only retrieval.")
+        return None
+
+
 class ChatService:
     SUPPORTED_ENTITY_LABELS = {"Trademark", "SPU", "SKU", "Category1", "Category2", "Category3"}
 
-    # 实体标签 → (向量索引名, 全文索引名)
-    _ENTITY_INDEXES = {
-        "Trademark":   ("trademark_embedding_index",   "trademark_fulltext_index"),
-        "SPU":         ("spu_embedding_index",         "spu_fulltext_index"),
-        "SKU":         ("sku_embedding_index",         "sku_fulltext_index"),
-        "Category1":   ("category1_embedding_index",   "category1_fulltext_index"),
-        "Category2":   ("category2_embedding_index",   "category2_fulltext_index"),
-        "Category3":   ("category3_embedding_index",   "category3_fulltext_index"),
-    }
+    _RETRIEVER_LABELS = SUPPORTED_ENTITY_LABELS
 
     def __init__(self):
-        neo4j_url  = NEO4J_CONFIG["uri"]
+        neo4j_url = NEO4J_CONFIG["uri"]
         neo4j_user = NEO4J_CONFIG["auth"][0]
         neo4j_pass = NEO4J_CONFIG["auth"][1]
 
+        # Graph connection for schema + Cypher execution
         self.graph = Neo4jGraph(url=neo4j_url, username=neo4j_user, password=neo4j_pass)
 
+        # Separate driver for raw search operations
+        self._driver = GraphDatabase.driver(neo4j_url, auth=(neo4j_user, neo4j_pass))
+
+        # Embedding model shared by all retrievers
         self.embedding = HuggingFaceEmbeddings(
             model_name=EMBEDDING_MODEL_NAME,
             encode_kwargs={"normalize_embeddings": True},
@@ -44,20 +60,32 @@ class ChatService:
 
         self.llm = ChatDeepSeek(model=LLM_MODEL_NAME)
 
-        self.neo4j_vector = {}
-        for label, (emb_idx, ft_idx) in self._ENTITY_INDEXES.items():
-            self.neo4j_vector[label] = Neo4jVector.from_existing_index(
-                embedding=self.embedding,
-                url=neo4j_url,
-                username=neo4j_user,
-                password=neo4j_pass,
-                index_name=emb_idx,
-                keyword_index_name=ft_idx,
-                search_type=SearchType.HYBRID,
+        # Milvus (optional)
+        self._milvus = _try_init_milvus()
+
+        # Build one HybridRetriever per entity label
+        self._retrievers: dict[str, HybridRetriever] = {}
+        for label in self._RETRIEVER_LABELS:
+            sources = [
+                make_neo4j_fulltext_searcher(self._driver, label),
+                make_neo4j_vector_searcher(self._driver, label, self.embedding),
+            ]
+            if self._milvus is not None:
+                sources.append(make_milvus_vector_searcher(self._milvus, self.embedding))
+            self._retrievers[label] = HybridRetriever(
+                neo4j_fulltext_search=sources[0],
+                neo4j_vector_search=sources[1],
+                milvus_vector_search=sources[2] if len(sources) > 2 else None,
             )
 
         self.json_parser = JsonOutputParser()
         self.str_parser = StrOutputParser()
+
+        logger.info(
+            "ChatService ready: %d retrievers (sources: neo4j_ft + neo4j_vec%s).",
+            len(self._retrievers),
+            " + milvus" if self._milvus else "",
+        )
 
     def chat(self, question: str) -> str:
         try:
@@ -121,11 +149,13 @@ class ChatService:
             entity_type = entity["label"]
             if entity_type not in self.SUPPORTED_ENTITY_LABELS:
                 raise UnsafeCypherError(f"Unsupported entity label: {entity_type}.")
-            neo4j_vector = self.neo4j_vector[entity_type]
-            results = neo4j_vector.similarity_search(entity_name, k=1)
-            if not results:
-                raise EntityAlignmentError(f"No aligned entity found for {entity_type}: {entity_name}")
-            entities_to_align[index]["entity"] = results[0].page_content
+            retriever = self._retrievers[entity_type]
+            hits = retriever.retrieve(entity_name, top_k=1)
+            if not hits:
+                raise EntityAlignmentError(
+                    f"No aligned entity found for {entity_type}: {entity_name}"
+                )
+            entities_to_align[index]["entity"] = hits[0].name
         return entities_to_align
 
     def _execute_cypher(self, cypher_query, aligned_entities):

@@ -1,169 +1,1050 @@
 {
-  "method": "neo4j_fulltext",
   "top_k": 5,
-  "case_count": 4,
-  "metrics": {
-    "recall@5": 0.625,
-    "precision@5": 0.3,
-    "mrr": 0.55
-  },
-  "cases": [
-    {
-      "question": "有没有适合拍照的 Apple 手机？",
-      "expected_entities": [
-        "Apple",
-        "iPhone 15"
-      ],
-      "hits": [
-        {
-          "name": "轻薄机身",
-          "label": "Tag",
-          "score": 0.9555239677429199
-        },
-        {
-          "name": "手机数码",
-          "label": "Category1",
-          "score": 0.6301337480545044
-        },
-        {
-          "name": "手机通讯",
-          "label": "Category2",
-          "score": 0.6301337480545044
-        },
-        {
-          "name": "智能手机",
-          "label": "Category3",
-          "score": 0.6301337480545044
-        },
-        {
-          "name": "Apple",
-          "label": "Trademark",
-          "score": 0.5330593585968018
-        }
-      ],
-      "metrics": {
-        "expected_count": 2,
-        "hit_count": 5,
-        "matched_count": 1,
-        "recall": 0.5,
-        "precision": 0.2,
-        "mrr": 0.2,
-        "matched_entities": [
-          "apple"
-        ]
-      }
+  "summary": {
+    "bm25_fulltext": {
+      "recall@5": 0.125,
+      "precision@5": 0.05,
+      "mrr": 0.08333333333333333
     },
-    {
-      "question": "华为 Mate 系列有什么卖点？",
-      "expected_entities": [
-        "华为",
-        "HUAWEI Mate 60"
-      ],
-      "hits": [
-        {
-          "name": "华为",
-          "label": "Trademark",
-          "score": 0.8242262601852417
-        },
-        {
-          "name": "HUAWEI Mate 60 256GB 雅川青",
-          "label": "SKU",
-          "score": 0.5305643081665039
-        },
-        {
-          "name": "HUAWEI Mate 60",
-          "label": "SPU",
-          "score": 0.49662238359451294
-        }
-      ],
-      "metrics": {
-        "expected_count": 2,
-        "hit_count": 3,
-        "matched_count": 2,
-        "recall": 1.0,
-        "precision": 0.6666666666666666,
-        "mrr": 1.0,
-        "matched_entities": [
-          "huawei mate 60",
-          "华为"
-        ]
-      }
+    "neo4j_vector": {
+      "recall@5": 0.125,
+      "precision@5": 0.05,
+      "mrr": 0.125
     },
-    {
-      "question": "推荐一个适合少油烹饪的厨房电器",
-      "expected_entities": [
-        "美的 5L 空气炸锅"
-      ],
-      "hits": [
-        {
-          "name": "低脂烹饪",
-          "label": "Tag",
-          "score": 1.9110479354858398
-        },
-        {
-          "name": "厨房小电",
-          "label": "Category2",
-          "score": 0.9452006220817566
-        },
-        {
-          "name": "大容量电池",
-          "label": "Tag",
-          "score": 0.8637937307357788
-        },
-        {
-          "name": "家用电器",
-          "label": "Category1",
-          "score": 0.6301337480545044
-        },
-        {
-          "name": "美的 5L 空气炸锅 白色",
-          "label": "SKU",
-          "score": 0.4728594422340393
-        }
-      ],
-      "metrics": {
-        "expected_count": 1,
-        "hit_count": 5,
-        "matched_count": 0,
-        "recall": 0.0,
-        "precision": 0.0,
-        "mrr": 0.0,
-        "matched_entities": []
-      }
+    "hybrid_rrf": {
+      "recall@5": 0.125,
+      "precision@5": 0.05,
+      "mrr": 0.125
     },
-    {
-      "question": "iPhone 15 有哪些 SKU？",
-      "expected_entities": [
-        "iPhone 15"
-      ],
-      "hits": [
-        {
-          "name": "iPhone 15",
-          "label": "SPU",
-          "score": 1.1209478378295898
-        },
-        {
-          "name": "iPhone 15 128GB 蓝色",
-          "label": "SKU",
-          "score": 0.6958234310150146
-        },
-        {
-          "name": "iPhone 15 256GB 黑色",
-          "label": "SKU",
-          "score": 0.6958234310150146
-        }
-      ],
-      "metrics": {
-        "expected_count": 1,
-        "hit_count": 3,
-        "matched_count": 1,
-        "recall": 1.0,
-        "precision": 0.3333333333333333,
-        "mrr": 1.0,
-        "matched_entities": [
-          "iphone 15"
-        ]
-      }
+    "hybrid_rrf_rerank": {
+      "recall@5": 0.0,
+      "precision@5": 0.0,
+      "mrr": 0.0
+    },
+    "milvus_vector": {
+      "recall@5": 0.125,
+      "precision@5": 0.05,
+      "mrr": 0.125
     }
-  ]
+  },
+  "details": {
+    "bm25_fulltext": {
+      "method": "BM25 Fulltext",
+      "top_k": 5,
+      "case_count": 4,
+      "metrics": {
+        "recall@5": 0.125,
+        "precision@5": 0.05,
+        "mrr": 0.08333333333333333
+      },
+      "cases": [
+        {
+          "question": "有没有适合拍照的 Apple 手机？",
+          "expected_entities": [
+            "Apple",
+            "iPhone 15"
+          ],
+          "hits": [
+            {
+              "name": "手机",
+              "label": "Category3",
+              "score": 2.896426200866699,
+              "source": "neo4j_ft"
+            },
+            {
+              "name": "拍照配件",
+              "label": "Category3",
+              "score": 2.7073781490325928,
+              "source": "neo4j_ft"
+            },
+            {
+              "name": "手机支架",
+              "label": "Category3",
+              "score": 1.9955706596374512,
+              "source": "neo4j_ft"
+            },
+            {
+              "name": "手机电池",
+              "label": "Category3",
+              "score": 1.9955706596374512,
+              "source": "neo4j_ft"
+            },
+            {
+              "name": "手机饰品",
+              "label": "Category3",
+              "score": 1.9955706596374512,
+              "source": "neo4j_ft"
+            }
+          ],
+          "metrics": {
+            "expected_count": 2,
+            "hit_count": 5,
+            "matched_count": 0,
+            "recall": 0.0,
+            "precision": 0.0,
+            "mrr": 0.0,
+            "matched_entities": []
+          }
+        },
+        {
+          "question": "华为 Mate 系列有什么卖点？",
+          "expected_entities": [
+            "华为",
+            "HUAWEI Mate 60"
+          ],
+          "hits": [
+            {
+              "name": "华为Mate 40 pro",
+              "label": "SPU",
+              "score": 2.707580804824829,
+              "source": "neo4j_ft"
+            },
+            {
+              "name": "华为Mate 40 pro 5G全网通麒麟9000芯片鸿蒙国货NFC双卡游戏学生 黑色 8+128 送适用100w充电器",
+              "label": "SKU",
+              "score": 2.493790626525879,
+              "source": "neo4j_ft"
+            },
+            {
+              "name": "华为",
+              "label": "Trademark",
+              "score": 1.2369766235351562,
+              "source": "neo4j_ft"
+            },
+            {
+              "name": "华为HUAWEI二手笔记本MateBook13触屏2K全面屏 便携二手笔记本电脑 Magic R5-2500-8G-256G-高分屏 95成新",
+              "label": "SKU",
+              "score": 1.0198415517807007,
+              "source": "neo4j_ft"
+            },
+            {
+              "name": "华为智慧屏V65i 65英寸 HEGE-560B 4K全面屏智能电视机 多方视频通话 AI升降摄像头 4GB+32GB 星际黑",
+              "label": "SKU",
+              "score": 0.9760711193084717,
+              "source": "neo4j_ft"
+            }
+          ],
+          "metrics": {
+            "expected_count": 2,
+            "hit_count": 5,
+            "matched_count": 1,
+            "recall": 0.5,
+            "precision": 0.2,
+            "mrr": 0.3333333333333333,
+            "matched_entities": [
+              "华为"
+            ]
+          }
+        },
+        {
+          "question": "推荐一个适合少油烹饪的厨房电器",
+          "expected_entities": [
+            "美的 5L 空气炸锅"
+          ],
+          "hits": [
+            {
+              "name": "其它厨房电器",
+              "label": "Category3",
+              "score": 5.292498588562012,
+              "source": "neo4j_ft"
+            },
+            {
+              "name": "烹饪美食",
+              "label": "Category3",
+              "score": 2.7073781490325928,
+              "source": "neo4j_ft"
+            },
+            {
+              "name": "充电器",
+              "label": "Category3",
+              "score": 2.2161669731140137,
+              "source": "neo4j_ft"
+            },
+            {
+              "name": "厨房DIY/小工具",
+              "label": "Category3",
+              "score": 2.0421106815338135,
+              "source": "neo4j_ft"
+            },
+            {
+              "name": "电子秤/厨房秤",
+              "label": "Category3",
+              "score": 2.0421106815338135,
+              "source": "neo4j_ft"
+            }
+          ],
+          "metrics": {
+            "expected_count": 1,
+            "hit_count": 5,
+            "matched_count": 0,
+            "recall": 0.0,
+            "precision": 0.0,
+            "mrr": 0.0,
+            "matched_entities": []
+          }
+        },
+        {
+          "question": "iPhone 15 有哪些 SKU？",
+          "expected_entities": [
+            "iPhone 15"
+          ],
+          "hits": [
+            {
+              "name": "iPhone 配件",
+              "label": "Category3",
+              "score": 3.2059385776519775,
+              "source": "neo4j_ft"
+            },
+            {
+              "name": "Apple iPhone 12",
+              "label": "SPU",
+              "score": 1.3709861040115356,
+              "source": "neo4j_ft"
+            },
+            {
+              "name": "Apple iPhone 16 Pro",
+              "label": "SPU",
+              "score": 1.30051851272583,
+              "source": "neo4j_ft"
+            },
+            {
+              "name": "H&U&W国行【2025新英特尔+酷睿i7】笔记本电脑轻薄本大学生办公便携高性能游戏本商务设计AI标压手提本 【15代14英寸】英特尔IPS护眼+9D蓝光全面屏 8G内存/128G超速硬盘",
+              "label": "SKU",
+              "score": 1.0653386116027832,
+              "source": "neo4j_ft"
+            },
+            {
+              "name": "Apple iPhone 12 (A2404) 64GB 蓝色 支持移动联通电信5G 双卡双待手机",
+              "label": "SKU",
+              "score": 0.9883270859718323,
+              "source": "neo4j_ft"
+            }
+          ],
+          "metrics": {
+            "expected_count": 1,
+            "hit_count": 5,
+            "matched_count": 0,
+            "recall": 0.0,
+            "precision": 0.0,
+            "mrr": 0.0,
+            "matched_entities": []
+          }
+        }
+      ]
+    },
+    "neo4j_vector": {
+      "method": "Neo4j Vector",
+      "top_k": 5,
+      "case_count": 4,
+      "metrics": {
+        "recall@5": 0.125,
+        "precision@5": 0.05,
+        "mrr": 0.125
+      },
+      "cases": [
+        {
+          "question": "有没有适合拍照的 Apple 手机？",
+          "expected_entities": [
+            "Apple",
+            "iPhone 15"
+          ],
+          "hits": [
+            {
+              "name": "Apple iPhone 12",
+              "label": "SPU",
+              "score": 0.7777135372161865,
+              "source": "neo4j_vec"
+            },
+            {
+              "name": "Apple iPhone 16 Pro",
+              "label": "SPU",
+              "score": 0.7597107887268066,
+              "source": "neo4j_vec"
+            },
+            {
+              "name": "苹果",
+              "label": "Trademark",
+              "score": 0.7470424175262451,
+              "source": "neo4j_vec"
+            },
+            {
+              "name": "Apple iPhone 12 (A2404) 128GB 黑色 支持移动联通电信5G 双卡双待手机",
+              "label": "SKU",
+              "score": 0.7335836887359619,
+              "source": "neo4j_vec"
+            },
+            {
+              "name": "Apple iPhone 12 (A2404) 64GB 红色 支持移动联通电信5G 双卡双待手机",
+              "label": "SKU",
+              "score": 0.7334685325622559,
+              "source": "neo4j_vec"
+            }
+          ],
+          "metrics": {
+            "expected_count": 2,
+            "hit_count": 5,
+            "matched_count": 0,
+            "recall": 0.0,
+            "precision": 0.0,
+            "mrr": 0.0,
+            "matched_entities": []
+          }
+        },
+        {
+          "question": "华为 Mate 系列有什么卖点？",
+          "expected_entities": [
+            "华为",
+            "HUAWEI Mate 60"
+          ],
+          "hits": [
+            {
+              "name": "华为Mate 40 pro",
+              "label": "SPU",
+              "score": 0.7251310348510742,
+              "source": "neo4j_vec"
+            },
+            {
+              "name": "华为",
+              "label": "Trademark",
+              "score": 0.7014217376708984,
+              "source": "neo4j_vec"
+            },
+            {
+              "name": "华为Mate 40 pro 5G全网通麒麟9000芯片鸿蒙国货NFC双卡游戏学生 黑色 8+128 送适用100w充电器",
+              "label": "SKU",
+              "score": 0.691997766494751,
+              "source": "neo4j_vec"
+            },
+            {
+              "name": "华为HUAWEI二手笔记本MateBook13触屏2K全面屏",
+              "label": "SPU",
+              "score": 0.6872055530548096,
+              "source": "neo4j_vec"
+            },
+            {
+              "name": "华为HUAWEI二手笔记本MateBook13触屏2K全面屏 便携二手笔记本电脑 Magic R5-2500-8G-256G-高分屏 95成新",
+              "label": "SKU",
+              "score": 0.6684238910675049,
+              "source": "neo4j_vec"
+            }
+          ],
+          "metrics": {
+            "expected_count": 2,
+            "hit_count": 5,
+            "matched_count": 1,
+            "recall": 0.5,
+            "precision": 0.2,
+            "mrr": 0.5,
+            "matched_entities": [
+              "华为"
+            ]
+          }
+        },
+        {
+          "question": "推荐一个适合少油烹饪的厨房电器",
+          "expected_entities": [
+            "美的 5L 空气炸锅"
+          ],
+          "hits": [
+            {
+              "name": "厨房小电",
+              "label": "Category2",
+              "score": 0.8054831027984619,
+              "source": "neo4j_vec"
+            },
+            {
+              "name": "其它厨房电器",
+              "label": "Category3",
+              "score": 0.7828290462493896,
+              "source": "neo4j_vec"
+            },
+            {
+              "name": "油烟机",
+              "label": "Category3",
+              "score": 0.7546472549438477,
+              "source": "neo4j_vec"
+            },
+            {
+              "name": "厨具",
+              "label": "Category1",
+              "score": 0.752772331237793,
+              "source": "neo4j_vec"
+            },
+            {
+              "name": "电子秤/厨房秤",
+              "label": "Category3",
+              "score": 0.7507171630859375,
+              "source": "neo4j_vec"
+            }
+          ],
+          "metrics": {
+            "expected_count": 1,
+            "hit_count": 5,
+            "matched_count": 0,
+            "recall": 0.0,
+            "precision": 0.0,
+            "mrr": 0.0,
+            "matched_entities": []
+          }
+        },
+        {
+          "question": "iPhone 15 有哪些 SKU？",
+          "expected_entities": [
+            "iPhone 15"
+          ],
+          "hits": [
+            {
+              "name": "Apple iPhone 16 Pro",
+              "label": "SPU",
+              "score": 0.7769052982330322,
+              "source": "neo4j_vec"
+            },
+            {
+              "name": "iPhone 配件",
+              "label": "Category3",
+              "score": 0.7739076614379883,
+              "source": "neo4j_vec"
+            },
+            {
+              "name": "Apple/苹果 iPhone 16 Pro（A3294）256GB 黑色钛金属 支持移动联通电信5G 双卡双待手机",
+              "label": "SKU",
+              "score": 0.74649977684021,
+              "source": "neo4j_vec"
+            },
+            {
+              "name": "苹果配件",
+              "label": "Category3",
+              "score": 0.7446341514587402,
+              "source": "neo4j_vec"
+            },
+            {
+              "name": "苹果周边",
+              "label": "Category3",
+              "score": 0.7384300231933594,
+              "source": "neo4j_vec"
+            }
+          ],
+          "metrics": {
+            "expected_count": 1,
+            "hit_count": 5,
+            "matched_count": 0,
+            "recall": 0.0,
+            "precision": 0.0,
+            "mrr": 0.0,
+            "matched_entities": []
+          }
+        }
+      ]
+    },
+    "hybrid_rrf": {
+      "method": "RRF (FT + Vector)",
+      "top_k": 5,
+      "case_count": 4,
+      "metrics": {
+        "recall@5": 0.125,
+        "precision@5": 0.05,
+        "mrr": 0.125
+      },
+      "cases": [
+        {
+          "question": "有没有适合拍照的 Apple 手机？",
+          "expected_entities": [
+            "Apple",
+            "iPhone 15"
+          ],
+          "hits": [
+            {
+              "name": "手机",
+              "label": "Category3",
+              "score": 0.01639344262295082,
+              "source": "neo4j_ft"
+            },
+            {
+              "name": "苹果",
+              "label": "Trademark",
+              "score": 0.01639344262295082,
+              "source": "neo4j_vec"
+            },
+            {
+              "name": "拍照配件",
+              "label": "Category3",
+              "score": 0.016129032258064516,
+              "source": "neo4j_ft"
+            },
+            {
+              "name": "华为",
+              "label": "Trademark",
+              "score": 0.016129032258064516,
+              "source": "neo4j_vec"
+            },
+            {
+              "name": "手机支架",
+              "label": "Category3",
+              "score": 0.015873015873015872,
+              "source": "neo4j_ft"
+            }
+          ],
+          "metrics": {
+            "expected_count": 2,
+            "hit_count": 5,
+            "matched_count": 0,
+            "recall": 0.0,
+            "precision": 0.0,
+            "mrr": 0.0,
+            "matched_entities": []
+          }
+        },
+        {
+          "question": "华为 Mate 系列有什么卖点？",
+          "expected_entities": [
+            "华为",
+            "HUAWEI Mate 60"
+          ],
+          "hits": [
+            {
+              "name": "华为Mate 40 pro",
+              "label": "SPU",
+              "score": 0.01639344262295082,
+              "source": "neo4j_ft"
+            },
+            {
+              "name": "华为",
+              "label": "Trademark",
+              "score": 0.01639344262295082,
+              "source": "neo4j_vec"
+            },
+            {
+              "name": "华为Mate 40 pro 5G全网通麒麟9000芯片鸿蒙国货NFC双卡游戏学生 黑色 8+128 送适用100w充电器",
+              "label": "SKU",
+              "score": 0.016129032258064516,
+              "source": "neo4j_ft"
+            },
+            {
+              "name": "苹果",
+              "label": "Trademark",
+              "score": 0.016129032258064516,
+              "source": "neo4j_vec"
+            },
+            {
+              "name": "华为",
+              "label": "Trademark",
+              "score": 0.015873015873015872,
+              "source": "neo4j_ft"
+            }
+          ],
+          "metrics": {
+            "expected_count": 2,
+            "hit_count": 5,
+            "matched_count": 1,
+            "recall": 0.5,
+            "precision": 0.2,
+            "mrr": 0.5,
+            "matched_entities": [
+              "华为"
+            ]
+          }
+        },
+        {
+          "question": "推荐一个适合少油烹饪的厨房电器",
+          "expected_entities": [
+            "美的 5L 空气炸锅"
+          ],
+          "hits": [
+            {
+              "name": "其它厨房电器",
+              "label": "Category3",
+              "score": 0.01639344262295082,
+              "source": "neo4j_ft"
+            },
+            {
+              "name": "小米",
+              "label": "Trademark",
+              "score": 0.01639344262295082,
+              "source": "neo4j_vec"
+            },
+            {
+              "name": "烹饪美食",
+              "label": "Category3",
+              "score": 0.016129032258064516,
+              "source": "neo4j_ft"
+            },
+            {
+              "name": "华为",
+              "label": "Trademark",
+              "score": 0.016129032258064516,
+              "source": "neo4j_vec"
+            },
+            {
+              "name": "充电器",
+              "label": "Category3",
+              "score": 0.015873015873015872,
+              "source": "neo4j_ft"
+            }
+          ],
+          "metrics": {
+            "expected_count": 1,
+            "hit_count": 5,
+            "matched_count": 0,
+            "recall": 0.0,
+            "precision": 0.0,
+            "mrr": 0.0,
+            "matched_entities": []
+          }
+        },
+        {
+          "question": "iPhone 15 有哪些 SKU？",
+          "expected_entities": [
+            "iPhone 15"
+          ],
+          "hits": [
+            {
+              "name": "iPhone 配件",
+              "label": "Category3",
+              "score": 0.01639344262295082,
+              "source": "neo4j_ft"
+            },
+            {
+              "name": "苹果",
+              "label": "Trademark",
+              "score": 0.01639344262295082,
+              "source": "neo4j_vec"
+            },
+            {
+              "name": "Apple iPhone 12",
+              "label": "SPU",
+              "score": 0.016129032258064516,
+              "source": "neo4j_ft"
+            },
+            {
+              "name": "VIVO",
+              "label": "Trademark",
+              "score": 0.016129032258064516,
+              "source": "neo4j_vec"
+            },
+            {
+              "name": "Apple iPhone 16 Pro",
+              "label": "SPU",
+              "score": 0.015873015873015872,
+              "source": "neo4j_ft"
+            }
+          ],
+          "metrics": {
+            "expected_count": 1,
+            "hit_count": 5,
+            "matched_count": 0,
+            "recall": 0.0,
+            "precision": 0.0,
+            "mrr": 0.0,
+            "matched_entities": []
+          }
+        }
+      ]
+    },
+    "hybrid_rrf_rerank": {
+      "method": "RRF + BGE-Reranker",
+      "top_k": 5,
+      "case_count": 4,
+      "metrics": {
+        "recall@5": 0.0,
+        "precision@5": 0.0,
+        "mrr": 0.0
+      },
+      "cases": [
+        {
+          "question": "有没有适合拍照的 Apple 手机？",
+          "expected_entities": [
+            "Apple",
+            "iPhone 15"
+          ],
+          "hits": [
+            {
+              "name": "Apple iPhone 12 (A2404) 64GB 红色 支持移动联通电信5G 双卡双待手机",
+              "label": "SKU",
+              "score": -2.544773578643799,
+              "source": "neo4j_vec"
+            },
+            {
+              "name": "Apple iPhone 12 (A2404) 64GB 黑色 支持移动联通电信5G 双卡双待手机",
+              "label": "SKU",
+              "score": -2.626797676086426,
+              "source": "neo4j_vec"
+            },
+            {
+              "name": "Apple iPhone 12 (A2404) 64GB 蓝色 支持移动联通电信5G 双卡双待手机",
+              "label": "SKU",
+              "score": -2.6575565338134766,
+              "source": "neo4j_vec"
+            },
+            {
+              "name": "Apple iPhone 12 (A2404) 64GB 白色 支持移动联通电信5G 双卡双待手机",
+              "label": "SKU",
+              "score": -2.657674789428711,
+              "source": "neo4j_vec"
+            },
+            {
+              "name": "Apple iPhone 12 (A2404) 128GB 黑色 支持移动联通电信5G 双卡双待手机",
+              "label": "SKU",
+              "score": -2.680098533630371,
+              "source": "neo4j_vec"
+            }
+          ],
+          "metrics": {
+            "expected_count": 2,
+            "hit_count": 5,
+            "matched_count": 0,
+            "recall": 0.0,
+            "precision": 0.0,
+            "mrr": 0.0,
+            "matched_entities": []
+          }
+        },
+        {
+          "question": "华为 Mate 系列有什么卖点？",
+          "expected_entities": [
+            "华为",
+            "HUAWEI Mate 60"
+          ],
+          "hits": [
+            {
+              "name": "华为Mate 40 pro 5G全网通麒麟9000芯片鸿蒙国货NFC双卡游戏学生 黑色 8+128 送适用100w充电器",
+              "label": "SKU",
+              "score": -3.0275726318359375,
+              "source": "neo4j_ft"
+            },
+            {
+              "name": "华为Mate 40 pro 5G全网通麒麟9000芯片鸿蒙国货NFC双卡游戏学生 黑色 8+128 送适用100w充电器",
+              "label": "SKU",
+              "score": -3.0275726318359375,
+              "source": "neo4j_vec"
+            },
+            {
+              "name": "华为HUAWEI二手笔记本MateBook13触屏2K全面屏 便携二手笔记本电脑 Magic R5-2500-8G-256G-高分屏 95成新",
+              "label": "SKU",
+              "score": -4.191661834716797,
+              "source": "neo4j_ft"
+            },
+            {
+              "name": "华为HUAWEI二手笔记本MateBook13触屏2K全面屏 便携二手笔记本电脑 Magic R5-2500-8G-256G-高分屏 95成新",
+              "label": "SKU",
+              "score": -4.191661834716797,
+              "source": "neo4j_vec"
+            },
+            {
+              "name": "华为Mate 40 pro",
+              "label": "SPU",
+              "score": -4.436273574829102,
+              "source": "neo4j_ft"
+            }
+          ],
+          "metrics": {
+            "expected_count": 2,
+            "hit_count": 5,
+            "matched_count": 0,
+            "recall": 0.0,
+            "precision": 0.0,
+            "mrr": 0.0,
+            "matched_entities": []
+          }
+        },
+        {
+          "question": "推荐一个适合少油烹饪的厨房电器",
+          "expected_entities": [
+            "美的 5L 空气炸锅"
+          ],
+          "hits": [
+            {
+              "name": "油烟机",
+              "label": "Category3",
+              "score": -1.3481724262237549,
+              "source": "neo4j_vec"
+            },
+            {
+              "name": "其它厨房电器",
+              "label": "Category3",
+              "score": -1.4912456274032593,
+              "source": "neo4j_ft"
+            },
+            {
+              "name": "其它厨房电器",
+              "label": "Category3",
+              "score": -1.4912456274032593,
+              "source": "neo4j_vec"
+            },
+            {
+              "name": "电饭煲",
+              "label": "Category3",
+              "score": -1.4982411861419678,
+              "source": "neo4j_vec"
+            },
+            {
+              "name": "厨房小电",
+              "label": "Category2",
+              "score": -2.111903190612793,
+              "source": "neo4j_vec"
+            }
+          ],
+          "metrics": {
+            "expected_count": 1,
+            "hit_count": 5,
+            "matched_count": 0,
+            "recall": 0.0,
+            "precision": 0.0,
+            "mrr": 0.0,
+            "matched_entities": []
+          }
+        },
+        {
+          "question": "iPhone 15 有哪些 SKU？",
+          "expected_entities": [
+            "iPhone 15"
+          ],
+          "hits": [
+            {
+              "name": "机身附件",
+              "label": "Category3",
+              "score": -5.565974712371826,
+              "source": "neo4j_vec"
+            },
+            {
+              "name": "iPhone 配件",
+              "label": "Category3",
+              "score": -5.997854232788086,
+              "source": "neo4j_ft"
+            },
+            {
+              "name": "iPhone 配件",
+              "label": "Category3",
+              "score": -5.997854232788086,
+              "source": "neo4j_vec"
+            },
+            {
+              "name": "苹果周边",
+              "label": "Category3",
+              "score": -6.5569891929626465,
+              "source": "neo4j_vec"
+            },
+            {
+              "name": "苹果配件",
+              "label": "Category3",
+              "score": -6.674622535705566,
+              "source": "neo4j_vec"
+            }
+          ],
+          "metrics": {
+            "expected_count": 1,
+            "hit_count": 5,
+            "matched_count": 0,
+            "recall": 0.0,
+            "precision": 0.0,
+            "mrr": 0.0,
+            "matched_entities": []
+          }
+        }
+      ]
+    },
+    "milvus_vector": {
+      "method": "Milvus Vector",
+      "top_k": 5,
+      "case_count": 4,
+      "metrics": {
+        "recall@5": 0.125,
+        "precision@5": 0.05,
+        "mrr": 0.125
+      },
+      "cases": [
+        {
+          "question": "有没有适合拍照的 Apple 手机？",
+          "expected_entities": [
+            "Apple",
+            "iPhone 15"
+          ],
+          "hits": [
+            {
+              "name": "Apple iPhone 12",
+              "label": "SPU",
+              "score": 0.5527159571647644,
+              "source": "milvus"
+            },
+            {
+              "name": "Apple iPhone 16 Pro",
+              "label": "SPU",
+              "score": 0.5154749155044556,
+              "source": "milvus"
+            },
+            {
+              "name": "苹果",
+              "label": "Trademark",
+              "score": 0.4908299744129181,
+              "source": "milvus"
+            },
+            {
+              "name": "苹果",
+              "label": "Tag",
+              "score": 0.4908299744129181,
+              "source": "milvus"
+            },
+            {
+              "name": "Apple iPhone 12 (A2404) 64GB 红色 支持移动联通电信5G 双卡双待手机",
+              "label": "SKU",
+              "score": 0.4692896008491516,
+              "source": "milvus"
+            }
+          ],
+          "metrics": {
+            "expected_count": 2,
+            "hit_count": 5,
+            "matched_count": 0,
+            "recall": 0.0,
+            "precision": 0.0,
+            "mrr": 0.0,
+            "matched_entities": []
+          }
+        },
+        {
+          "question": "华为 Mate 系列有什么卖点？",
+          "expected_entities": [
+            "华为",
+            "HUAWEI Mate 60"
+          ],
+          "hits": [
+            {
+              "name": "华为Mate 40 pro",
+              "label": "SPU",
+              "score": 0.45031648874282837,
+              "source": "milvus"
+            },
+            {
+              "name": "华为",
+              "label": "Trademark",
+              "score": 0.4041088819503784,
+              "source": "milvus"
+            },
+            {
+              "name": "性价比",
+              "label": "Tag",
+              "score": 0.3977765440940857,
+              "source": "milvus"
+            },
+            {
+              "name": "颜值",
+              "label": "Tag",
+              "score": 0.39297884702682495,
+              "source": "milvus"
+            },
+            {
+              "name": "华为Mate 40 pro 5G全网通麒麟9000芯片鸿蒙国货NFC双卡游戏学生 黑色 8+128 送适用100w充电器",
+              "label": "SKU",
+              "score": 0.38458406925201416,
+              "source": "milvus"
+            }
+          ],
+          "metrics": {
+            "expected_count": 2,
+            "hit_count": 5,
+            "matched_count": 1,
+            "recall": 0.5,
+            "precision": 0.2,
+            "mrr": 0.5,
+            "matched_entities": [
+              "华为"
+            ]
+          }
+        },
+        {
+          "question": "推荐一个适合少油烹饪的厨房电器",
+          "expected_entities": [
+            "美的 5L 空气炸锅"
+          ],
+          "hits": [
+            {
+              "name": "厨房小电",
+              "label": "Category2",
+              "score": 0.6116988062858582,
+              "source": "milvus"
+            },
+            {
+              "name": "其它厨房电器",
+              "label": "Category3",
+              "score": 0.5699039697647095,
+              "source": "milvus"
+            },
+            {
+              "name": "油烟机",
+              "label": "Category3",
+              "score": 0.5104546546936035,
+              "source": "milvus"
+            },
+            {
+              "name": "厨具",
+              "label": "Category1",
+              "score": 0.5071121454238892,
+              "source": "milvus"
+            },
+            {
+              "name": "电子秤/厨房秤",
+              "label": "Category3",
+              "score": 0.5061092972755432,
+              "source": "milvus"
+            }
+          ],
+          "metrics": {
+            "expected_count": 1,
+            "hit_count": 5,
+            "matched_count": 0,
+            "recall": 0.0,
+            "precision": 0.0,
+            "mrr": 0.0,
+            "matched_entities": []
+          }
+        },
+        {
+          "question": "iPhone 15 有哪些 SKU？",
+          "expected_entities": [
+            "iPhone 15"
+          ],
+          "hits": [
+            {
+              "name": "Apple iPhone 16 Pro",
+              "label": "SPU",
+              "score": 0.5534870624542236,
+              "source": "milvus"
+            },
+            {
+              "name": "iPhone 配件",
+              "label": "Category3",
+              "score": 0.5492717027664185,
+              "source": "milvus"
+            },
+            {
+              "name": "Apple/苹果 iPhone 16 Pro（A3294）256GB 黑色钛金属 支持移动联通电信5G 双卡双待手机",
+              "label": "SKU",
+              "score": 0.494400292634964,
+              "source": "milvus"
+            },
+            {
+              "name": "苹果配件",
+              "label": "Category3",
+              "score": 0.48997923731803894,
+              "source": "milvus"
+            },
+            {
+              "name": "苹果周边",
+              "label": "Category3",
+              "score": 0.47746163606643677,
+              "source": "milvus"
+            }
+          ],
+          "metrics": {
+            "expected_count": 1,
+            "hit_count": 5,
+            "matched_count": 0,
+            "recall": 0.0,
+            "precision": 0.0,
+            "mrr": 0.0,
+            "matched_entities": []
+          }
+        }
+      ]
+    }
+  }
 }
