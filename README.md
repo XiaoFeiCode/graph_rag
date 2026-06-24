@@ -111,7 +111,7 @@ flowchart TB
 
 ![Neo4j 商品知识图谱](display_imgs/ne4j_dispalay.png)
 
-> Demo 图谱覆盖三级品类、品牌、SPU、SKU、标签及销售属性关系。使用 `scripts/seed_graph.py` 即可一键初始化。
+> 示例图谱覆盖三级品类、品牌、SPU、SKU、标签及销售属性关系，使用 `scripts/seed_graph.py` 一键初始化。如果已有真实 MySQL 数据，可直接走 [数据同步](#数据同步) 链路写入完整图谱。
 
 ---
 
@@ -123,15 +123,18 @@ graph_rag/
 │   ├── cdc_table_mapping.json       # Debezium 表 → 图谱映射
 │   └── uie_product_tag.yaml         # UIE 商品抽取训练配置
 ├── data/
-│   ├── demo/catalog.json            # Demo 商品图谱数据
+│   ├── demo/catalog.json            # 示例商品图谱数据（快速体验）
+│   ├── gmall.sql                    # MySQL 业务库建表与数据
 │   └── ner/                         # NER 标注与预处理数据
+│       ├── description.txt          #   商品描述原始文本
+│       └── raw/data.json            #   Label Studio BIO 标注数据
 ├── display_imgs/
 │   └── ne4j_dispalay.png            # Neo4j 图谱可视化截图
 ├── examples/
-│   └── questions.json               # Demo 测试问题与预期实体
+│   └── questions.json               # 测试问题与预期实体
 ├── scripts/
 │   ├── create_indexes.py            # Neo4j 约束与全文索引创建
-│   ├── seed_graph.py                # Demo 图谱一键写入
+│   ├── seed_graph.py                # 示例图谱一键写入
 │   ├── smoke_query.py               # 图谱查询 smoke test
 │   ├── sync_milvus_entities.py      # Neo4j 实体 → Milvus 同步
 │   ├── register_debezium_connector.py
@@ -186,6 +189,10 @@ graph_rag/
 
 > **Windows 用户**：以下命令使用 PowerShell 语法，Linux/macOS 用户将 `Copy-Item` 替换为 `cp`。
 
+> 💡 **两种使用方式**：
+> - **快速体验**：使用内置 `data/demo/catalog.json` 示例图谱，无需 MySQL，按步骤 1-7 执行即可
+> - **真实数据**：使用 `data/gmall.sql` 导入 MySQL 后走 [数据同步](#数据同步) 链路写入完整图谱，再启动问答服务
+
 ### 1. 克隆项目
 
 ```bash
@@ -221,7 +228,9 @@ docker compose up -d
 
 > Neo4j Browser 访问 http://localhost:7474（默认 neo4j / graph_rag_demo）
 
-### 5. 初始化 Demo 图谱
+### 5. 初始化示例图谱（可选）
+
+> 如果你没有 MySQL 业务数据，可以使用内置的示例图谱快速体验。已有真实数据请跳到 [数据同步](#数据同步)。
 
 ```powershell
 uv run python -m scripts.seed_graph
@@ -354,6 +363,10 @@ uv run uvicorn src.web.app:app --host 0.0.0.0 --port 8000
 从 MySQL 全量同步商品、品牌、品类和属性到 Neo4j：
 
 ```powershell
+# 1. 导入 MySQL 业务数据（如果本地还没有）
+mysql -u root -p gmall < data/gmall.sql
+
+# 2. 全量同步到 Neo4j
 uv run python -m src.datasync.table_sync
 ```
 
@@ -376,6 +389,13 @@ uv run python -m src.datasync.cdc_consumer              # 启动消费
 > 表 → 图谱映射维护在 `configs/cdc_table_mapping.json`。
 
 ### NER 训练与评估
+
+训练数据位于 `data/ner/`：
+
+| 文件 | 说明 |
+| --- | --- |
+| `data/ner/description.txt` | 商品描述原始文本（85KB） |
+| `data/ner/raw/data.json` | Label Studio BIO 标注数据（732KB） |
 
 ```powershell
 uv sync --extra ml
@@ -467,7 +487,7 @@ uv run python -m src.evaluation.retrieval_eval --top-k 5
 
 ### 当前边界
 
-- Demo 图谱为小样例数据，用于验证图谱建模、索引和查询链路。
+- 示例图谱为小样例数据，用于快速验证图谱建模、索引和查询链路。完整业务数据需通过 [数据同步](#数据同步) 从 MySQL 导入。
 - 完整问答依赖 DeepSeek API、BGE Embedding 和 Neo4j 向量索引。
 - `checkpoints/` 下模型权重不提交 Git。
 - MySQL → Neo4j 支持批量同步和 CDC 消费，业务表覆盖可继续扩展。

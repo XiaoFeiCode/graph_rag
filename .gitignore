@@ -16,7 +16,7 @@ venv/
 *.ipynb
 .ipynb_checkpoints/
 
-# Training artifacts and local data
+# Training artifacts
 checkpoints/
 logs/
 models/
@@ -26,11 +26,10 @@ data/ner/processed/
 *.pth
 *.bin
 
-# Keep the sample annotation dataset optional; uncomment before publishing if needed.
-# data/ner/raw/data.json
-
 # OS and IDE
 .vscode/
 .idea/
 .DS_Store
 Thumbs.db
+.reasonix/
+reasonix.toml
