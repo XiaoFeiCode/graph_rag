@@ -14,7 +14,6 @@ RAW_DATA_DIR = DATA_DIR / NER_DIR / 'raw'
 PROCESSED_DATA_DIR = DATA_DIR / NER_DIR / 'processed'
 
 LOGS_DIR = ROOT_DIR / 'logs'
-AUTO_DIR = "/root/tf-logs/"
 CHECKPOINTS_DIR = ROOT_DIR / 'checkpoints'
 MODELS_DIR = ROOT_DIR / 'models'
 
