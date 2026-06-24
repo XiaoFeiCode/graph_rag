@@ -1,5 +1,8 @@
-# UIE Training — AutoDL / conda environment
+# UIE Training — AutoDL (pip handles transitive deps automatically)
+modelscope>=1.17
 torch>=2.3
 transformers>=4.41
 accelerate>=1.1
 datasets>=2.19
+evaluate>=0.4
+sacrebleu>=2.0
