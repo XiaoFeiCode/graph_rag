@@ -68,9 +68,28 @@ flowchart TB
 
 ## 运行效果
 
-问：Apple品牌的手机有什么推荐？
+**示例问答流程**
 
-答：为您推荐苹果品牌的两款手机——**Apple iPhone 12** 和 **Apple iPhone 16 Pro**。其中 iPhone 16 Pro 为最新旗舰机型，性能更强；iPhone 12 则是性价比较高的选择。请问您对哪一款更感兴趣？
+```
+用户: Apple品牌的手机有什么推荐？
+  │
+  ├─ 1. LLM 解析问题 → 生成参数化 Cypher
+  │      MATCH (t:Trademark {name: $param_0})-[:Belong]-(spu:SPU)
+  │      RETURN spu.name, spu.description LIMIT 5
+  │
+  ├─ 2. 实体对齐 (Hybrid Retrieval)
+  │      "Apple" → BGE 向量召回 + 全文检索 → "Apple" (Trademark)
+  │
+  ├─ 3. 只读安全校验 ✅
+  │      MATCH 开头 · 单条语句 · 含 RETURN · 无写入关键字
+  │
+  ├─ 4. 图谱查询 → 返回 Apple 品牌下 SPU 列表
+  │
+  └─ 5. LLM 基于查询结果生成回答
+         "为您推荐苹果品牌的两款手机——Apple iPhone 12 和
+          Apple iPhone 16 Pro。其中 iPhone 16 Pro 为最新旗舰
+          机型，性能更强；iPhone 12 则是性价比较高的选择。"
+```
 
 ![问答运行效果](docs/question_display.png)
 
