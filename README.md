@@ -62,7 +62,7 @@ flowchart TB
     Milvus --> Hybrid
 ```
 
-## 运行效果
+## 知识图谱可视化
 
 ![Neo4j 商品知识图谱](docs/ne4j_dispalay.png)
 
