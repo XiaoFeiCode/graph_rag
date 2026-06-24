@@ -1,0 +1,33 @@
+{
+  "base_category1": {
+    "node": {"label": "Category1", "id": "id", "name": "name"}
+  },
+  "base_category2": {
+    "node": {"label": "Category2", "id": "id", "name": "name"},
+    "relationships": [
+      {"type": "Belong", "start_label": "Category2", "start_id": "id", "end_label": "Category1", "end_id": "category1_id"}
+    ]
+  },
+  "base_category3": {
+    "node": {"label": "Category3", "id": "id", "name": "name"},
+    "relationships": [
+      {"type": "Belong", "start_label": "Category3", "start_id": "id", "end_label": "Category2", "end_id": "category2_id"}
+    ]
+  },
+  "base_trademark": {
+    "node": {"label": "Trademark", "id": "id", "name": "tm_name"}
+  },
+  "spu_info": {
+    "node": {"label": "SPU", "id": "id", "name": "spu_name", "description": "description"},
+    "relationships": [
+      {"type": "Belong", "start_label": "SPU", "start_id": "id", "end_label": "Category3", "end_id": "category3_id"},
+      {"type": "Belong", "start_label": "SPU", "start_id": "id", "end_label": "Trademark", "end_id": "tm_id"}
+    ]
+  },
+  "sku_info": {
+    "node": {"label": "SKU", "id": "id", "name": "sku_name"},
+    "relationships": [
+      {"type": "Belong", "start_label": "SKU", "start_id": "id", "end_label": "SPU", "end_id": "spu_id"}
+    ]
+  }
+}

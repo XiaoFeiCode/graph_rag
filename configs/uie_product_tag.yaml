@@ -1,0 +1,31 @@
+model:
+  provider: modelscope
+  model_id: iic/nlp_structbert_siamese-uie_chinese-base
+  local_dir: models/uie
+
+task:
+  name: product_tag_extraction
+  schema:
+    - 商品名
+    - 品牌
+    - 品类
+    - 属性
+    - 卖点
+    - 规格
+
+training:
+  device: cuda
+  gpu_reference: NVIDIA RTX 3060 12GB or better
+  max_length: 256
+  batch_size: 16
+  epochs: 5
+  learning_rate: 2e-5
+  warmup_ratio: 0.1
+  weight_decay: 0.01
+  fp16: true
+
+data:
+  train_file: data/uie/train.jsonl
+  valid_file: data/uie/valid.jsonl
+  test_file: data/uie/test.jsonl
+  output_dir: checkpoints/uie

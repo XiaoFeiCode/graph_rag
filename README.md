@@ -15,10 +15,11 @@
 
 电商商品问答中，用户问题通常包含品牌、品类、型号、规格、卖点和长尾属性。仅依赖关键词搜索容易召回不全，仅依赖大模型生成又容易产生无法追溯的答案。本项目将商品、品牌、SKU/SPU、品类、属性和标签建模为知识图谱，通过图查询保证结构化关系的准确性，通过向量检索和全文检索提升实体对齐能力。
 
-当前项目包含完整的图谱构建、NER 标签抽取、Hybrid Retrieval、GraphRAG 问答服务和最小可运行 Demo：
+当前项目包含完整的图谱构建、NER/UIE 标签抽取、Hybrid Retrieval、GraphRAG 问答服务和最小可运行 Demo：
 
 - 基于 MySQL 业务表的商品知识图谱同步流程。
 - 基于 BERT token classification 的中文商品标签抽取模型。
+- 基于 ModelScope UIE 公开模型的商品信息抽取扩展入口。
 - 基于 BGE Embedding、Neo4j 向量索引和全文索引的 Hybrid Retrieval 实体对齐。
 - 基于 LangChain + DeepSeek 的参数化 Cypher 生成和答案生成。
 - 基于 FastAPI 的 `/api/chat` 问答接口和静态聊天页面。
@@ -28,8 +29,10 @@
 
 - **商品图谱建模**：覆盖 `SKU`、`SPU`、品牌、三级品类、平台属性、销售属性和商品标签。
 - **数据同步链路**：将 MySQL 中的商品、类目、品牌和属性数据批量写入 Neo4j。
+- **CDC 增量同步**：提供 Debezium + Kafka 消费模块，将 MySQL binlog 变更增量写入 Neo4j。
 - **长尾标签抽取**：使用中文 BERT NER 模型从商品描述中抽取卖点、规格和场景标签。
-- **Hybrid Retrieval**：结合 BGE 向量召回和 Neo4j full-text index，对齐用户问题中的商品、品牌和品类实体。
+- **UIE 抽取扩展**：预留 ModelScope UIE 模型下载与微调入口，用于商品名、品牌、品类、属性、卖点和规格抽取。
+- **Hybrid Retrieval**：结合 BGE 向量召回、Milvus/Neo4j 向量索引和 Neo4j full-text index，对齐用户问题中的商品、品牌和品类实体。
 - **GraphRAG 问答**：由 LLM 生成参数化 Cypher，执行图谱查询后再基于结构化结果生成回答。
 - **查询安全控制**：执行前校验 LLM 生成的 Cypher，只允许单条只读查询，阻断写入和过程调用。
 - **可复现 Demo**：内置样例商品图谱，可通过 `docker compose` 和 seed 脚本快速跑通。
@@ -51,9 +54,13 @@ flowchart TB
     Answer --> API
 
     MySQL[(MySQL gmall)] --> Sync[TableSync / TextSync]
-    Label[Label Studio JSON] --> NER[BERT NER]
+    MySQL --> CDC[Debezium + Kafka CDC]
+    CDC --> Sync
+    Label[Label Studio JSON] --> NER[BERT NER / UIE]
     NER --> Sync
     Sync --> Graph
+    Graph --> Milvus[(Milvus Entity Index)]
+    Milvus --> Hybrid
 ```
 
 ## 项目结构
@@ -65,6 +72,9 @@ graph_rag/
 │   └── ner/raw/data.json       # 商品 NER 标注样例
 ├── docs/
 │   └── architecture.md         # 架构与链路说明
+├── configs/
+│   ├── cdc_table_mapping.json  # Debezium 表到图谱的映射
+│   └── uie_product_tag.yaml    # UIE 商品抽取训练配置
 ├── examples/
 │   └── questions.json          # Demo 问题与预期实体
 ├── scripts/
@@ -76,7 +86,10 @@ graph_rag/
 │   ├── datasync/               # MySQL -> Neo4j 数据同步
 │   ├── evaluation/             # 检索评估脚本
 │   ├── ner/                    # NER 数据处理、训练、评估和预测
+│   ├── retrieval/              # Milvus 实体索引与检索
 │   └── web/                    # FastAPI、GraphRAG 服务和前端页面
+├── docker-compose.cdc.yml      # MySQL + Kafka + Debezium Connect
+├── docker-compose.milvus.yml   # Milvus standalone
 ├── docker-compose.yml          # Neo4j 本地服务
 ├── pyproject.toml              # Python 依赖配置
 └── uv.lock                     # 可复现依赖锁文件
@@ -99,6 +112,7 @@ Docker Compose
 DeepSeek API Key
 Neo4j 5.x
 BGE embedding model runtime
+Milvus，可选
 ```
 
 NER 训练：
@@ -108,6 +122,15 @@ PyTorch
 Transformers
 HuggingFace Datasets
 GPU 可选
+```
+
+CDC 增量同步：
+
+```text
+MySQL binlog
+Kafka
+Debezium Connect
+Neo4j
 ```
 
 ## 快速开始
@@ -197,6 +220,13 @@ http://localhost:8000
 | `NEO4J_USER` / `NEO4J_PASSWORD` | Neo4j 账号密码 | 是 |
 | `MODEL_NAME` | NER 预训练模型名称 | 训练 NER 时使用 |
 | `HF_ENDPOINT` | Hugging Face 镜像地址 | 可选 |
+| `CDC_KAFKA_BOOTSTRAP_SERVERS` | Kafka 地址 | 运行 CDC consumer 时必填 |
+| `CDC_TOPIC_PREFIX` | Debezium topic prefix | 运行 CDC consumer 时必填 |
+| `DEBEZIUM_CONNECT_URL` | Debezium Connect 地址 | 注册 connector 时必填 |
+| `MILVUS_URI` | Milvus 服务地址 | 使用 Milvus 检索时必填 |
+| `MILVUS_COLLECTION` | Milvus 实体 collection | 使用 Milvus 检索时必填 |
+| `UIE_MODEL_ID` | ModelScope UIE 模型 ID | 下载 UIE 模型时必填 |
+| `UIE_MODEL_DIR` | UIE 本地模型目录 | 下载 UIE 模型时必填 |
 
 不要提交真实的 `.env` 文件。
 
@@ -219,6 +249,35 @@ uv run python -m src.datasync.text_sync
 ```powershell
 uv run python -m scripts.seed_graph
 ```
+
+## CDC 增量同步
+
+启动 MySQL、Kafka 和 Debezium Connect：
+
+```powershell
+docker compose -f docker-compose.cdc.yml up -d
+```
+
+注册 MySQL Debezium connector：
+
+```powershell
+uv sync --extra cdc
+uv run python -m scripts.register_debezium_connector
+```
+
+消费 Debezium 事件并写入 Neo4j：
+
+```powershell
+uv run python -m src.datasync.cdc_consumer
+```
+
+表到图谱的映射文件位于：
+
+```text
+configs/cdc_table_mapping.json
+```
+
+当前映射覆盖 `base_category1`、`base_category2`、`base_category3`、`base_trademark`、`spu_info` 和 `sku_info`，后续可以继续扩展平台属性、销售属性和库存价格等表。
 
 ## NER 训练与评估
 
@@ -251,6 +310,91 @@ uv run python -m src.ner.eval
 ```powershell
 uv run python -m src.ner.predict
 ```
+
+训练配置：
+
+| 配置项 | 当前值 |
+| --- | --- |
+| Backbone | `google-bert/bert-base-chinese` |
+| 任务 | 商品文本 BIO 序列标注 |
+| 标签 | `B`、`I`、`O` |
+| Epochs | `5` |
+| Batch Size | `2` |
+| Learning Rate | `7e-6` |
+| Save / Eval Steps | `20` |
+| Mixed Precision | `fp16=True` |
+| 参考训练环境 | 单卡 NVIDIA RTX 3060 12GB 或同级 CUDA GPU；小样本也可 CPU smoke test |
+
+## UIE 商品信息抽取
+
+项目预留了 UIE 方案，用于从商品标题和详情中抽取商品名、品牌、品类、属性、卖点和规格。当前使用 ModelScope 公开模型：
+
+```text
+iic/nlp_structbert_siamese-uie_chinese-base
+```
+
+下载模型到本地：
+
+```powershell
+uv sync --extra uie
+uv run python -m scripts.download_uie_model
+```
+
+模型会下载到：
+
+```text
+models/uie
+```
+
+`models/` 已被 `.gitignore` 忽略，权重不会提交到 GitHub。UIE 训练配置位于：
+
+```text
+configs/uie_product_tag.yaml
+```
+
+训练配置摘要：
+
+| 配置项 | 当前值 |
+| --- | --- |
+| ModelScope Model ID | `iic/nlp_structbert_siamese-uie_chinese-base` |
+| Schema | 商品名、品牌、品类、属性、卖点、规格 |
+| Max Length | `256` |
+| Batch Size | `16` |
+| Epochs | `5` |
+| Learning Rate | `2e-5` |
+| Warmup Ratio | `0.1` |
+| Weight Decay | `0.01` |
+| Mixed Precision | `fp16=true` |
+| 参考训练环境 | NVIDIA RTX 3060 12GB 或更高显存 CUDA GPU |
+
+校验配置和数据路径：
+
+```powershell
+uv run python -m src.ner.uie_train --dry-run
+```
+
+## Milvus 实体索引
+
+启动 Milvus standalone：
+
+```powershell
+docker compose -f docker-compose.milvus.yml up -d
+```
+
+安装 Milvus 依赖并同步 Neo4j 实体到 Milvus：
+
+```powershell
+uv sync --extra milvus
+uv run python -m scripts.sync_milvus_entities
+```
+
+Milvus collection 默认名为：
+
+```text
+commerce_entities
+```
+
+当前 Milvus 代码用于承接实体向量召回，后续可与 Neo4j full-text 结果做 RRF 融合，形成完整 Hybrid Retrieval 对比实验。
 
 ## API 示例
 
@@ -327,6 +471,8 @@ reports/retrieval_eval.md
 python -m unittest tests.test_cypher_guard
 python -m compileall -q src scripts tests main.py
 docker compose config
+docker compose -f docker-compose.cdc.yml config
+docker compose -f docker-compose.milvus.yml config
 uv run python -m scripts.seed_graph
 uv run python -m scripts.smoke_query
 uv run python -m src.evaluation.retrieval_eval --top-k 5
@@ -337,13 +483,14 @@ uv run python -m src.evaluation.retrieval_eval --top-k 5
 - Demo 图谱为小样例数据，用于验证图谱建模、索引和查询链路。
 - 完整问答服务依赖 DeepSeek API、BGE embedding 模型和 Neo4j 向量索引。
 - `checkpoints/` 下的模型权重体积较大，默认不提交到 Git。
-- 当前 MySQL -> Neo4j 为批量同步流程，实时增量同步可以继续扩展 Debezium + Kafka。
+- MySQL -> Neo4j 支持批量同步和 Debezium CDC 消费模块；业务表覆盖范围可继续扩展。
 - 当前检索评估基于小样例图谱，后续可扩展为更大规模商品 QA 测试集。
+- UIE 和 Milvus 均为可选扩展能力，默认不下载模型权重、不启动 Milvus 服务。
 
 ## Roadmap
 
 - 扩展 Retrieval Evaluation：对比全文检索、向量检索和 Hybrid Retrieval。
-- 将向量索引扩展到 Milvus，Neo4j 保留结构化关系推理。
+- 将 Milvus 检索结果接入 GraphRAG 实体对齐主链路。
 - 增加 Cypher 生成模板和错误重试策略。
-- 增加 Docker Compose 中的 MySQL 服务和初始化样例数据。
+- 扩展 CDC 表映射，覆盖价格、库存和销售属性变更。
 - 增加 GraphRAG API 的集成测试和 CI smoke test。

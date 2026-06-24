@@ -1,0 +1,56 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: graph-rag-mysql
+    restart: unless-stopped
+    ports:
+      - "3307:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD:-graph_rag_demo}
+      MYSQL_DATABASE: ${MYSQL_DB:-gmall}
+    command:
+      - --server-id=184054
+      - --log-bin=mysql-bin
+      - --binlog-format=ROW
+      - --binlog-row-image=FULL
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  zookeeper:
+    image: quay.io/debezium/zookeeper:2.7
+    container_name: graph-rag-zookeeper
+    restart: unless-stopped
+    ports:
+      - "2181:2181"
+
+  kafka:
+    image: quay.io/debezium/kafka:2.7
+    container_name: graph-rag-kafka
+    restart: unless-stopped
+    ports:
+      - "9092:9092"
+    environment:
+      ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+    depends_on:
+      - zookeeper
+
+  connect:
+    image: quay.io/debezium/connect:2.7
+    container_name: graph-rag-debezium
+    restart: unless-stopped
+    ports:
+      - "8083:8083"
+    environment:
+      BOOTSTRAP_SERVERS: kafka:9092
+      GROUP_ID: graph-rag-connect
+      CONFIG_STORAGE_TOPIC: graph-rag-connect-configs
+      OFFSET_STORAGE_TOPIC: graph-rag-connect-offsets
+      STATUS_STORAGE_TOPIC: graph-rag-connect-status
+    depends_on:
+      - kafka
+      - mysql
+
+volumes:
+  mysql_data:

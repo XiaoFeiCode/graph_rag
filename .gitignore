@@ -19,6 +19,7 @@ venv/
 # Training artifacts and local data
 checkpoints/
 logs/
+models/
 data/ner/processed/
 *.safetensors
 *.pt

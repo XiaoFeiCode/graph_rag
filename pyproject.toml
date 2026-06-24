@@ -21,10 +21,23 @@ rag = [
     "langchain-neo4j>=0.1",
     "neo4j-graphrag>=1.7",
 ]
+cdc = [
+    "confluent-kafka>=2.5",
+    "requests>=2.32",
+]
+milvus = [
+    "pymilvus>=2.4",
+    "langchain-huggingface>=0.1",
+]
 ml = [
     "datasets>=2.19",
     "evaluate>=0.4",
     "seqeval>=1.2",
+    "torch>=2.3",
+    "transformers>=4.41",
+]
+uie = [
+    "modelscope>=1.17",
     "torch>=2.3",
     "transformers>=4.41",
 ]
