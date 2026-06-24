@@ -24,6 +24,8 @@ WEB_STATIC_DIR = ROOT_DIR / 'src' / 'web' / 'static'
 # 2. 数据文件名和模型名称
 RAW_DATA_FILE = str(RAW_DATA_DIR / 'data.json')
 MODEL_NAME = os.getenv("MODEL_NAME", "google-bert/bert-base-chinese")
+EMBEDDING_MODEL_NAME = os.getenv("EMBEDDING_MODEL_NAME", "BAAI/bge-large-zh-v1.5")
+LLM_MODEL_NAME = os.getenv("LLM_MODEL_NAME", "deepseek-chat")
 UIE_MODEL_ID = os.getenv("UIE_MODEL_ID", "iic/nlp_structbert_siamese-uie_chinese-base")
 UIE_MODEL_DIR = ROOT_DIR / os.getenv("UIE_MODEL_DIR", "models/uie")
 

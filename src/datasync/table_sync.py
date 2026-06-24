@@ -221,39 +221,26 @@ class TableSync:
 
 
 
+_SYNC_STEPS = [
+    # 1. 同步类别
+    "sync_category1", "sync_category2", "sync_category3",
+    "sync_category2_to_category1", "sync_category3_to_category2",
+    # 2. 同步平台属性
+    "sync_base_attr_name", "sync_base_attr_value", "sync_base_attr_name_value",
+    "sync_category1_to_base_attr_name", "sync_category2_to_base_attr_name", "sync_category3_to_base_attr_name",
+    # 3. 同步商品信息
+    "sync_spu", "sync_sku", "sync_sku_to_spu", "sync_spu_to_category3",
+    # 4. 同步品牌信息
+    "sync_trademark", "sync_spu_to_trademark",
+    # 5. 同步销售属性
+    "sync_sale_attr", "sync_sale_attr_value", "sync_sale_attr_name_to_value",
+    "sync_spu_to_sale_attr_name", "sync_sku_to_sale_attr_value", "sync_sku_to_base_attr_value",
+]
+
 if __name__ == '__main__':
     sync = TableSync()
-
-    # 1. 同步类别
-    sync.sync_category1()
-    sync.sync_category2()
-    sync.sync_category3()
-    sync.sync_category2_to_category1()
-    sync.sync_category3_to_category2()
-
-    # 2. 同步平台属性
-    sync.sync_base_attr_name()
-    sync.sync_base_attr_value()
-    sync.sync_base_attr_name_value()
-    sync.sync_category1_to_base_attr_name()
-    sync.sync_category2_to_base_attr_name()
-    sync.sync_category3_to_base_attr_name()
-
-    # 3. 同步商品信息
-    sync.sync_spu()
-    sync.sync_sku()
-    sync.sync_sku_to_spu()
-    sync.sync_spu_to_category3()
-
-    # 4. 同步品牌信息
-    sync.sync_trademark()
-    sync.sync_spu_to_trademark()
-
-    # 5. 同步销售属性
-    sync.sync_sale_attr()
-    sync.sync_sale_attr_value()
-    sync.sync_sale_attr_name_to_value()
-    sync.sync_spu_to_sale_attr_name()
-    sync.sync_sku_to_sale_attr_value()
-    sync.sync_sku_to_base_attr_value()
+    for method_name in _SYNC_STEPS:
+        getattr(sync, method_name)()
+    sync.reader.close()
+    sync.writer.close()
 
